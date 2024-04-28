@@ -1,0 +1,3 @@
+* 설치하기
+
+=init.el= 과 =early-init.el= 파일은 =~/.config/emacs/= 디렉토리나 =~/.emacs.d/= 에 복사할 것
