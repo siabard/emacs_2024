@@ -9,6 +9,7 @@
   - [[#elpaca-package-manager][Elpaca Package Manager]]
   - [[#enable-elpaka][Enable Elpaka]]
   - [[#general-keybindings][General Keybindings]]
+- [[#diminish][Diminish]]
 - [[#all-icons][All Icons]]
 - [[#fonts][FONTS]]
   - [[#setting-the-font-face][Setting The Font Face]]
@@ -32,9 +33,11 @@
   - [[#markdown][Markdown]]
 - [[#프로그래밍-언어][프로그래밍 언어]]
   - [[#common-lisp][Common Lisp]]
+  - [[#c][C++]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
+  - [[#exec-path-from-shell][Exec Path from shell]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -90,7 +93,10 @@
   ;; Install use-package support
   (elpaca elpaca-use-package
     ;; Enable use-package :ensure support for Elpaca.
-    (elpaca-use-package-mode))
+    (elpaca-use-package-mode)
+    (setq elpaca-use-package-by-default 1))
+
+  (elpaca-wait)
 
   (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 
@@ -106,6 +112,13 @@
 
 #+END_SRC
 
+
+* Diminish
+
+#+BEGIN_SRC emacs-lisp
+  (use-package diminish
+    :ensure t)
+#+END_SRC
 
 * All Icons
 
@@ -319,22 +332,19 @@
 
 #+BEGIN_SRC emacs-lisp
   (use-package counsel
-    :ensure t
-    :after ivy
-    :config (counsel-mode))
+        :ensure t
+        :after ivy
+        :config (counsel-mode))
 
   (use-package ivy
-    :ensure t
-    :bind
-    ;; ivy-resume resumes the last Ivy-based completion.
-    (("C-c C-r" . ivy-resume)
-     ("C-x B" . ivy-switch-buffer-other-window))
-    :custom
-    (setq ivy-use-virtual-buffers t)
-    (setq ivy-count-format "(%d/%d) ")
-    (setq enable-recursive-minibuffers t)
-    :config
-    (ivy-mode))
+        :ensure t
+        :diminish
+        :bind
+        ;; ivy-resume resumes the last Ivy-based completion.
+        (("C-c C-r" . ivy-resume)
+         ("C-x B" . ivy-switch-buffer-other-window))
+        :config
+        (ivy-mode))
 
   (use-package all-the-icons-ivy-rich
     :ensure t
@@ -343,15 +353,11 @@
   (use-package ivy-rich
     :after ivy
     :ensure t
-    :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
-    :custom
+    :init (ivy-rich-mode 1)
+    :custom 
     (ivy-virtual-abbreviate 'full
      ivy-rich-switch-buffer-align-virtual-buffer t
-     ivy-rich-path-style 'abbrev)
-    :config
-    (ivy-set-display-transformer 'ivy-switch-buffer
-                                 'ivy-rich-switch-buffer-transformer))
-
+     ivy-rich-path-style 'abbrev))
 #+END_SRC
 
 ** Git (Magit)
@@ -389,43 +395,73 @@
 ** Common Lisp
 
 #+BEGIN_SRC emacs-lisp
-;; Common Lisp 로딩
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
-(use-package slime :ensure t)
-(use-package slime-autoloads :ensure t :elpaca nil)
+  ;; Common Lisp 로딩
+  (use-package slime 
+    :ensure t
+    :init
+    (load (expand-file-name "~/quicklisp/slime-helper.el")))
+
+  ;; (use-package slime-autoloads :ensure t)
 
 
-(setq inferior-lisp-program
-      (cond ((eq system-type 'gnu/linux) "/usr/bin/sbcl")
-            ((eq system-type 'darwin) "/usr/local/bin/sbcl")))
+  (setq inferior-lisp-program
+        (cond ((eq system-type 'gnu/linux) "/usr/bin/sbcl")
+              ((eq system-type 'darwin) "/usr/local/bin/sbcl")))
 
 
-(add-hook 'lisp-mode-hook #'paredit-mode)
-(add-hook 'lisp-mode-hook (lambda () (slime-mode t)))
-(add-hook 'inferior-lisp-mode-hook (lambda () (inferior-slime-mode t)))
+  (add-hook 'lisp-mode-hook #'paredit-mode)
+  (add-hook 'lisp-mode-hook (lambda () (slime-mode t)))
+  (add-hook 'inferior-lisp-mode-hook (lambda () (inferior-slime-mode t)))
 
-;; hyper spec
-(load "/home/siabard/quicklisp/clhs-use-local.el" t)
-;; (setq common-lisp-hyperspec-root
-;;      (concat "file://" (expand-file-name "~/doc/common-lisp/HyperSpec/")))
+  ;; hyper spec
+  (load "/home/siabard/quicklisp/clhs-use-local.el" t)
+  ;; (setq common-lisp-hyperspec-root
+  ;;      (concat "file://" (expand-file-name "~/doc/common-lisp/HyperSpec/")))
 
-(setq browse-url-handlers '(("http://lispworks.com" . eww-browse-url)
-			    ("file://" . eww-browse-url)
-			    ("" . browse-url-default-browser)))
+  (setq browse-url-handlers '(("http://lispworks.com" . eww-browse-url)
+                              ("file://" . eww-browse-url)
+                              ("" . browse-url-default-browser)))
 
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
+  (use-package ac-slime
+    :ensure t
+    :config
+    (add-hook 'slime-mode-hook 'set-up-slime-ac)
+    (add-hook 'slime-repl-mode-hook 'set-up-slime-ac)
+    (eval-after-load "auto-complete"
+      '(add-to-list 'ac-modes 'slime-repl-mode)))
 
-(use-package ac-slime
-  :ensure t
-  :config
-  (add-hook 'slime-mode-hook 'set-up-slime-ac)
-  (add-hook 'slime-repl-mode-hook 'set-up-slime-ac)
-  (eval-after-load "auto-complete"
-    '(add-to-list 'ac-modes 'slime-repl-mode)))
-
-(provide 'prelude-lisp)
+  (provide 'prelude-lisp)
 
 #+END_SRC
+
+
+** C++
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ccls
+    :ensure t)
+
+  (use-package eglot
+    :ensure nil
+    :hook
+    ((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
+    :config
+    (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
+								    "{\"clang\": {
+	\"extraArgs\": [
+	  \"-isystem/usr/local/include\", 
+	  \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
+	  \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
+	  \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
+	  \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
+	],
+	\"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
+      }
+    }"))))
+
+#+END_SRC
+
+
 * 기타
 
 
@@ -450,4 +486,13 @@
 #+BEGIN_SRC emacs-lisp
   (use-package sudo-edit
     :ensure t)
+#+END_SRC
+
+** Exec Path from shell
+#+BEGIN_SRC emacs-lisp
+  (use-package exec-path-from-shell
+    :ensure t
+    :config 
+    (when (memq window-system '(mac ns x))
+      (exec-path-from-shell-initialize)))
 #+END_SRC
