@@ -34,6 +34,8 @@
 - [[#프로그래밍-언어][프로그래밍 언어]]
   - [[#common-lisp][Common Lisp]]
   - [[#c][C++]]
+  - [[#d-lang][D-lang]]
+  - [[#eglot][Eglot]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
@@ -434,30 +436,47 @@
 ** C++
 
 #+BEGIN_SRC emacs-lisp
+
   (use-package ccls
-    :ensure t)
+      :ensure t )
+
+#+END_SRC
+
+
+** D-lang
+#+BEGIN_SRC emacs-lisp
+  (use-package d-mode
+    :ensure t
+    )
+
+#+END_SRC
+
+
+
+** Eglot
+#+BEGIN_SRC emacs-lisp
 
   (use-package eglot
     :ensure nil
     :hook
     ((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
-    :config
+    (d-mode . eglot-ensure)
+    :config 
     (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
-								    "{\"clang\": {
-	\"extraArgs\": [
-	  \"-isystem/usr/local/include\", 
-	  \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
-	  \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
-	  \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
-	  \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
-	],
-	\"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
-      }
-    }"))))
+                                                                      "{\"clang\": {
+          \"extraArgs\": [
+            \"-isystem/usr/local/include\", 
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
+          ],
+          \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
+        }
+      }")))
+    (add-to-list 'eglot-server-programs '(d-mode . ("/Users/siabard/.local/bin/serve-d"))))
 
 #+END_SRC
-
-
 * 기타
 
 
