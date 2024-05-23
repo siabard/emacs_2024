@@ -305,6 +305,16 @@
     :defer t
     :diminish
     :init (global-flycheck-mode))
+
+  (use-package flycheck-dmd-dub
+    :ensure 
+    ( :package "flycheck-dmd-dub"
+      :repo "atilaneves/flycheck-dmd-dub"
+      :fetcher github
+      :source "MELPA")
+    :hook
+    (d-mode . flycheck-dmd-dub-set-variables)
+    )
 #+END_SRC
 
 ** Company
@@ -447,8 +457,13 @@
 #+BEGIN_SRC emacs-lisp
   (use-package d-mode
     :ensure t
+    :hook (d-mode . company-mode)
     )
 
+  (use-package company-dcd 
+    :ensure t
+    :after d-mode
+    :hook (d-mode . company-dcd-mode))
 #+END_SRC
 
 
@@ -474,9 +489,10 @@
           \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
         }
       }")))
-    (add-to-list 'eglot-server-programs '(d-mode . ("/Users/siabard/.local/bin/serve-d"))))
+    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d"))))
 
 #+END_SRC
+
 * 기타
 
 
