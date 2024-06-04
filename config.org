@@ -9,6 +9,7 @@
   - [[#elpaca-package-manager][Elpaca Package Manager]]
   - [[#enable-elpaka][Enable Elpaka]]
   - [[#general-keybindings][General Keybindings]]
+  - [[#back-파일-및-임시파일-이동][Back 파일 및 임시파일 이동]]
 - [[#diminish][Diminish]]
 - [[#all-icons][All Icons]]
 - [[#fonts][FONTS]]
@@ -114,7 +115,26 @@
 
 #+END_SRC
 
+** Back 파일 및 임시파일 이동 
+#+BEGIN_SRC emacs-lisp
+  (let ((backup-dir "~/tmp/emacs/backups")
+        (auto-saves-dir "~/tmp/emacs/auto-saves/"))
+    (dolist (dir (list backup-dir auto-saves-dir))
+      (when (not (file-directory-p dir))
+        (make-directory dir t)))
+    (setq backup-directory-alist `(("." . ,backup-dir))
+          auto-save-file-name-transforms `((".*" ,auto-saves-dir t))
+          auto-save-list-file-prefix (concat auto-saves-dir ".saves-")
+          tramp-backup-directory-alist `((".*" . ,backup-dir))
+          tramp-auto-save-directory auto-saves-dir))
 
+  (setq backup-by-copying t    ; Don't delink hardlinks
+        delete-old-versions t  ; Clean up the backups
+        version-control t      ; Use version numbers on backups,
+        kept-new-versions 5    ; keep some new versions
+        kept-old-versions 2)   ; and some old ones, too
+
+#+END_SRC
 * Diminish
 
 #+BEGIN_SRC emacs-lisp
@@ -375,12 +395,17 @@
 ** Git (Magit)
 
 #+BEGIN_SRC emacs-lisp
-    (use-package magit
+  (use-package magit
+  :ensure t
+  :commands (magit-status)
+  :bind (("C-x g" . magit-status))
+  :config
+  (setf (alist-get 'unpushed magit-section-initial-visibility-alist) 'show))
+
+
+  (use-package transient
     :ensure t
-    :commands (magit-status)
-    :bind (("C-x g" . magit-status))
-    :config
-    (setf (alist-get 'unpushed magit-section-initial-visibility-alist) 'show))
+    :after magit)
 #+END_SRC
 
 ** Markdown
