@@ -32,6 +32,7 @@
   - [[#ivy][IVY]]
   - [[#git-magit][Git (Magit)]]
   - [[#markdown][Markdown]]
+  - [[#hide-show-mode][Hide Show mode]]
 - [[#프로그래밍-언어][프로그래밍 언어]]
   - [[#common-lisp][Common Lisp]]
   - [[#c][C++]]
@@ -423,6 +424,11 @@
 
 #+END_SRC
 
+
+** Hide Show mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'prog-mode-hook #'hs-minor-mode)
+#+END_SRC
 * 프로그래밍 언어
 
 ** Common Lisp
