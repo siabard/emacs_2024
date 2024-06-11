@@ -42,6 +42,7 @@
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
   - [[#exec-path-from-shell][Exec Path from shell]]
+  - [[#android-tramp-설정][Android Tramp 설정]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -557,4 +558,29 @@
     :config 
     (when (memq window-system '(mac ns x))
       (exec-path-from-shell-initialize)))
+#+END_SRC
+
+** Android Tramp 설정
+#+BEGIN_SRC emacs-lisp
+  (connection-local-set-profile-variables
+   'tramp-connection-local-termux-profile
+   `((tramp-remote-path
+      . ,(mapcar
+          (lambda (x)
+            (if (stringp x) (concat "/data/data/com.termux/files" x) x))
+          (copy-tree tramp-remote-path)))))
+
+  (connection-local-set-profiles
+   '(:application tramp :machine "192.168.0.11")
+   'tramp-connection-local-termux-profile)
+
+
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "android") "remote-shell" "sh"))
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "android")
+                     "tmpdir" "/data/data/com.termux/files/home/tmp"))
+  (connection-local-set-profiles
+   '(:application tramp :machine "android")
+   'tramp-connection-local-termux-profile)
 #+END_SRC
