@@ -283,6 +283,28 @@
 #+END_SRc
 
 
+
+*** ORG-ROAM
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :init
+    (setq org-roam-v2-ack t)
+    (setq ob-mermaid-cli-path "/usr/local/bin/mmdc")
+
+    :custom 
+    (org-roam-directory "~/doc/org-roam")
+    (org-roam-completion-everywhere t)
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-setup))
+#+END_SRC
+
 * WHICH KEY
 
 #+BEGIN_SRC emacs-lisp
