@@ -24,6 +24,9 @@
   - [[#toc][TOC]]
   - [[#org-bullet][ORG Bullet]]
   - [[#disable-electric-indent][Disable Electric Indent]]
+  - [[#scheduling][Scheduling]]
+  - [[#org-auto-tangle][org-auto-tangle]]
+  - [[#org-roam][ORG-ROAM]]
 - [[#which-key][WHICH KEY]]
 - [[#프로그래밍-지원][프로그래밍 지원]]
   - [[#rainbow-mode][Rainbow Mode]]
@@ -283,8 +286,21 @@
 #+END_SRc
 
 
+** Scheduling
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :ensure nil
+    :config 
+    (setq org-agenda-files (list "~/doc/org/agenda.org"))
+    :bind (("C-c l" . org-store-link)
+           ("C-c a" . org-agenda)))
 
-*** ORG-ROAM
+#+END_SRC
+
+** org-auto-tangle
+=org-auto-tangle= 은 =#+auto_tangle: t= 를 모든 org 파일에 넣어줍니다.
+
+** ORG-ROAM
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
@@ -452,6 +468,7 @@
 #+BEGIN_SRC emacs-lisp
   (add-hook 'prog-mode-hook #'hs-minor-mode)
 #+END_SRC
+
 * 프로그래밍 언어
 
 ** Common Lisp
