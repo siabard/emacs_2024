@@ -521,7 +521,10 @@
           \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
         }
       }")))
-    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d"))))
+    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d")))
+    (setq-default eglot-workspace-configuration
+                  '((:d . (:stdlibPath ("/Library/D/dmd/src/phobos"
+                                        "/Library/D/dmd/src/druntime/src"))))))
 
 #+END_SRC
 
@@ -571,7 +574,7 @@
           (copy-tree tramp-remote-path)))))
 
   (connection-local-set-profiles
-   '(:application tramp :machine "192.168.0.11")
+   '(:application tramp :machine "192.168.196.169")
    'tramp-connection-local-termux-profile)
 
 
