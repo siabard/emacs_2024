@@ -25,7 +25,7 @@
   - [[#org-bullet][ORG Bullet]]
   - [[#disable-electric-indent][Disable Electric Indent]]
   - [[#scheduling][Scheduling]]
-  - [[#org-auto-tangle][org-auto-tangle]]
+  - [[#ob-mermaid][ob mermaid]]
   - [[#org-roam][ORG-ROAM]]
 - [[#which-key][WHICH KEY]]
 - [[#프로그래밍-지원][프로그래밍 지원]]
@@ -291,14 +291,25 @@
   (use-package org
     :ensure nil
     :config 
-    (setq org-agenda-files (list "~/doc/org/agenda.org"))
+    (setq org-agenda-files (list "~/doc/org/agenda.org" "~/doc/org/game_project.org"))
     :bind (("C-c l" . org-store-link)
            ("C-c a" . org-agenda)))
 
 #+END_SRC
 
-** org-auto-tangle
-=org-auto-tangle= 은 =#+auto_tangle: t= 를 모든 org 파일에 넣어줍니다.
+** ob mermaid 
+#+BEGIN_SRC emacs-lisp
+  (use-package ob-mermaid
+    :ensure t
+    :config
+    (setq ob-mermaid-cli-path "~/.local/bin/mmdc")
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((mermaid . t)
+       (scheme . t)
+       (lisp . t)
+       (emacs-lisp . t))))
+#+END_SRC
 
 ** ORG-ROAM
 
