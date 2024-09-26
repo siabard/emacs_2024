@@ -7,6 +7,7 @@
 * Table of Contents :toc:
 - [[#important-programs-to-load-first][IMPORTANT PROGRAMS TO LOAD FIRST]]
   - [[#elpaca-package-manager][Elpaca Package Manager]]
+  - [[#eldoc][Eldoc]]
   - [[#enable-elpaka][Enable Elpaka]]
   - [[#general-keybindings][General Keybindings]]
   - [[#back-파일-및-임시파일-이동][Back 파일 및 임시파일 이동]]
@@ -36,11 +37,13 @@
   - [[#git-magit][Git (Magit)]]
   - [[#markdown][Markdown]]
   - [[#hide-show-mode][Hide Show mode]]
+  - [[#jsonrpc][JsonRPC]]
+  - [[#eglot][Eglot]]
 - [[#프로그래밍-언어][프로그래밍 언어]]
   - [[#common-lisp][Common Lisp]]
   - [[#c][C++]]
   - [[#d-lang][D-lang]]
-  - [[#eglot][Eglot]]
+  - [[#rust--rust-mode][Rust  (RUST mode)]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
@@ -93,6 +96,18 @@
 
 #+END_SRC
 
+
+** Eldoc
+
+#+BEGIN_SRC emacs-lisp
+  (unload-feature 'eldoc t)
+  (setq custom-delayed-init-variables '())
+  (defvar global-eldoc-mode nil)
+  (elpaca eldoc
+    (require 'eldoc)
+    (global-eldoc-mode)
+    (provide 'eldoc))
+#+END_SRC
 
 ** Enable Elpaka
 
@@ -393,8 +408,6 @@
 #+BEGIN_SRC emacs-lisp
   (use-package company
     :ensure t
-    :defer 2
-    :diminish
     :custom
     (company-begin-commands '(self-insert-command))
     (company-idle-delay .1)
@@ -487,6 +500,44 @@
   (add-hook 'prog-mode-hook #'hs-minor-mode)
 #+END_SRC
 
+
+
+
+** JsonRPC
+#+BEGIN_SRC emacs-lisp
+  (use-package jsonrpc
+    :ensure t)
+#+END_SRC
+
+** Eglot
+#+BEGIN_SRC emacs-lisp
+  
+  (use-package eglot
+    ;;:ensure (:inherit elpaca-menu-gnu-devel-elpa)
+    :ensure t
+    :demand t
+    :after (jsonrpc)
+    :hook
+    (((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
+     (d-mode . eglot-ensure))
+    :config 
+    (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
+                                                                      "{\"clang\": {
+          \"extraArgs\": [
+            \"-isystem/usr/local/include\", 
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
+            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
+          ],
+          \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
+        }
+      }")))
+    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d"))))
+
+  (elpaca-wait)
+#+END_SRC
+
 * 프로그래밍 언어
 
 ** Common Lisp
@@ -557,33 +608,31 @@
 
 
 
-** Eglot
+** Rust  (RUST mode)
 #+BEGIN_SRC emacs-lisp
 
-  (use-package eglot
-    :ensure nil
-    :hook
-    ((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
-    (d-mode . eglot-ensure)
-    :config 
-    (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
-                                                                      "{\"clang\": {
-          \"extraArgs\": [
-            \"-isystem/usr/local/include\", 
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
-          ],
-          \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
-        }
-      }")))
-    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d")))
-    (setq-default eglot-workspace-configuration
-                  '((:d . (:stdlibPath ("/Library/D/dmd/src/phobos"
-                                        "/Library/D/dmd/src/druntime/src"))))))
+  (use-package rust-mode
+    :ensure t
+    :after (eglot)
+    :init
+    (setq rust-mode-treesitter-derive t)
+    (setq rust-rustfmt-bin (expand-file-name "~/.cargo/bin/rustfmt")
+          rust-cargo-bin (expand-file-name "~/.cargo/bin/cargo"))
+    (add-to-list 'eglot-server-programs `((rust-mode rust-ts-mode) . (,(expand-file-name "~/.local/bin/rust-analyzer"))))
+    (setq rust-format-on-save t)
+    (add-hook 'rust-mode-hook
+              (lambda () (prettify-symbols-mode)))
+    (add-hook 'rust-mode-hook
+              (lambda () (setq indent-tabs-mode nil
+                               tab-width 4
+                               c-basic-offset 4
+                               fill-column 120)))
+    :hook 
+    (((rust-mode rust-ts-mode) . company-mode)
+     ((rust-mode rust-ts-mode) . eglot-ensure)))
 
 #+END_SRC
+
 
 * 기타
 
@@ -622,25 +671,28 @@
 
 ** Android Tramp 설정
 #+BEGIN_SRC emacs-lisp
-  (connection-local-set-profile-variables
-   'tramp-connection-local-termux-profile
-   `((tramp-remote-path
-      . ,(mapcar
-          (lambda (x)
-            (if (stringp x) (concat "/data/data/com.termux/files" x) x))
-          (copy-tree tramp-remote-path)))))
+  (use-package tramp
+    :ensure t
+    :config
+    (connection-local-set-profile-variables
+     'tramp-connection-local-termux-profile
+     `((tramp-remote-path
+        . ,(mapcar
+            (lambda (x)
+              (if (stringp x) (concat "/data/data/com.termux/files" x) x))
+            (copy-tree tramp-remote-path)))))
 
-  (connection-local-set-profiles
-   '(:application tramp :machine "192.168.196.169")
-   'tramp-connection-local-termux-profile)
+    (connection-local-set-profiles
+     '(:application tramp :machine "192.168.196.169")
+     'tramp-connection-local-termux-profile)
 
 
-  (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "android") "remote-shell" "sh"))
-  (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "android")
-                     "tmpdir" "/data/data/com.termux/files/home/tmp"))
-  (connection-local-set-profiles
-   '(:application tramp :machine "android")
-   'tramp-connection-local-termux-profile)
+    (add-to-list 'tramp-connection-properties
+                 (list (regexp-quote "android") "remote-shell" "sh"))
+    (add-to-list 'tramp-connection-properties
+                 (list (regexp-quote "android")
+                       "tmpdir" "/data/data/com.termux/files/home/tmp"))
+    (connection-local-set-profiles
+     '(:application tramp :machine "android")
+     'tramp-connection-local-termux-profile))
 #+END_SRC
