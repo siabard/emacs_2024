@@ -44,6 +44,7 @@
   - [[#c][C++]]
   - [[#d-lang][D-lang]]
   - [[#rust--rust-mode][Rust  (RUST mode)]]
+  - [[#pascal][PASCAL]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
@@ -568,7 +569,7 @@
   (add-hook 'inferior-lisp-mode-hook (lambda () (inferior-slime-mode t)))
 
   ;; hyper spec
-  (load "/home/siabard/quicklisp/clhs-use-local.el" t)
+  (load (expand-file-name "~/quicklisp/clhs-use-local.el" ) t)
   ;; (setq common-lisp-hyperspec-root
   ;;      (concat "file://" (expand-file-name "~/doc/common-lisp/HyperSpec/")))
 
@@ -639,6 +640,12 @@
 
 #+END_SRC
 
+
+
+** PASCAL
+#+BEGIN_SRC emacs-lisp
+
+#+END_SRC
 
 * 기타
 
