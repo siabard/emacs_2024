@@ -44,7 +44,7 @@
   - [[#c][C++]]
   - [[#d-lang][D-lang]]
   - [[#rust--rust-mode][Rust  (RUST mode)]]
-  - [[#pascal][PASCAL]]
+  - [[#pascal-fpc][PASCAL (FPC)]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
@@ -569,7 +569,7 @@
   (add-hook 'inferior-lisp-mode-hook (lambda () (inferior-slime-mode t)))
 
   ;; hyper spec
-  (load (expand-file-name "~/quicklisp/clhs-use-local.el" ) t)
+  (load (expand-file-name "~/quicklisp/clhs-use-local.el") 'noerror)
   ;; (setq common-lisp-hyperspec-root
   ;;      (concat "file://" (expand-file-name "~/doc/common-lisp/HyperSpec/")))
 
@@ -640,11 +640,25 @@
 
 #+END_SRC
 
-
-
-** PASCAL
+** PASCAL (FPC)
 #+BEGIN_SRC emacs-lisp
-
+  (use-package fpc-mode
+    :ensure t
+    :load-path "~/doc/emacs_2024/"
+    :commands fpc-mode
+    :after (eglot)
+    :init
+    (add-to-list 'auto-mode-alist
+                 '("\\.\\(pas\\|pp\\|lpr\\|dpr\\)\\'" . fpc-mode))
+    (add-to-list 'eglot-server-programs `((pascal-mode fpc-mode) . (,(expand-file-name "~/.local/bin/pasls") 
+                                                                    :initializationOptions (:PP "/usr/local/bin/fpc"
+                                                                                                :FPCDIR ,(expand-file-name "~/.local/lazarus/fpc/3.2.2/sources")
+                                                                                                :LAZARUSDIR ,(expand-file-name "~/.local/lazarus")
+                                                                                                :FPCTARGET "aarch64-darwin"
+                                                                                                :FPCTARGETCPU "aarch64"))))
+    :hook
+    ((fpc-mode . company-mode)
+     (fpc-mode . eglot-ensure)))
 #+END_SRC
 
 * 기타
