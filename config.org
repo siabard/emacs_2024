@@ -641,9 +641,6 @@
 
 #+END_SRC
 
-
-
-
 ** PASCAL (FPC)
 #+BEGIN_SRC emacs-lisp
   (use-package fpc-mode
