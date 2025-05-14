@@ -7,8 +7,8 @@
 * Table of Contents :toc:
 - [[#important-programs-to-load-first][IMPORTANT PROGRAMS TO LOAD FIRST]]
   - [[#elpaca-package-manager][Elpaca Package Manager]]
-  - [[#eldoc][Eldoc]]
   - [[#enable-elpaka][Enable Elpaka]]
+  - [[#eldoc][Eldoc]]
   - [[#general-keybindings][General Keybindings]]
   - [[#back-파일-및-임시파일-이동][Back 파일 및 임시파일 이동]]
 - [[#diminish][Diminish]]
@@ -57,59 +57,47 @@
 
 #+BEGIN_SRC emacs-lisp
 
-  (defvar elpaca-installer-version 0.8)
-  (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-  (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-  (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-  (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                                :ref nil :depth 1
-                                :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                                :build (:not elpaca--activate-package)))
-  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-         (build (expand-file-name "elpaca/" elpaca-builds-directory))
-         (order (cdr elpaca-order))
-         (default-directory repo))
-    (add-to-list 'load-path (if (file-exists-p build) build repo))
-    (unless (file-exists-p repo)
-      (make-directory repo t)
-      (when (< emacs-major-version 28) (require 'subr-x))
-      (condition-case-unless-debug err
-          (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                    ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                    ,@(when-let* ((depth (plist-get order :depth)))
-                                                        (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                    ,(plist-get order :repo) ,repo))))
-                    ((zerop (call-process "git" nil buffer t "checkout"
-                                          (or (plist-get order :ref) "--"))))
-                    (emacs (concat invocation-directory invocation-name))
-                    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                          "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                    ((require 'elpaca))
-                    ((elpaca-generate-autoloads "elpaca" repo)))
-              (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-            (error "%s" (with-current-buffer buffer (buffer-string))))
-        ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-    (unless (require 'elpaca-autoloads nil t)
-      (require 'elpaca)
-      (elpaca-generate-autoloads "elpaca" repo)
-      (load "./elpaca-autoloads")))
-  (add-hook 'after-init-hook #'elpaca-process-queues)
-  (elpaca `(,@elpaca-order))
+(defvar elpaca-installer-version 0.11)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil :depth 1 :inherit ignore
+                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (<= emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                  ,@(when-let* ((depth (plist-get order :depth)))
+                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                  ,(plist-get order :repo) ,repo))))
+                  ((zerop (call-process "git" nil buffer t "checkout"
+                                        (or (plist-get order :ref) "--"))))
+                  (emacs (concat invocation-directory invocation-name))
+                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                  ((require 'elpaca))
+                  ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
 
 #+END_SRC
 
-
-** Eldoc
-
-#+BEGIN_SRC emacs-lisp
-  (unload-feature 'eldoc t)
-  (setq custom-delayed-init-variables '())
-  (defvar global-eldoc-mode nil)
-  (elpaca eldoc
-    (require 'eldoc)
-    (global-eldoc-mode)
-    (provide 'eldoc))
-#+END_SRC
 
 ** Enable Elpaka
 
@@ -126,6 +114,19 @@
   (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 
 #+END_SRC
+
+** Eldoc
+
+#+BEGIN_SRC emacs-lisp
+  (unload-feature 'eldoc t)
+  (setq custom-delayed-init-variables '())
+  (defvar global-eldoc-mode nil)
+  (elpaca eldoc
+    (require 'eldoc)
+    (global-eldoc-mode)
+    (provide 'eldoc))
+#+END_SRC
+
 
 ** General Keybindings
 
@@ -643,23 +644,23 @@
 
 ** PASCAL (FPC)
 #+BEGIN_SRC emacs-lisp
-  (use-package fpc-mode
+  (use-package opascal-mode
     :ensure nil
-    :load-path "~/doc/emacs_2024/"
-    :commands fpc-mode
     :after (eglot)
     :init
     (add-to-list 'auto-mode-alist
-                 '("\\.\\(pas\\|pp\\|lpr\\|dpr\\)\\'" . fpc-mode))
-    (add-to-list 'eglot-server-programs `((pascal-mode fpc-mode) . (,(expand-file-name "~/.local/bin/pasls") 
-                                                                    :initializationOptions (:PP "/usr/local/bin/fpc"
-                                                                                                :FPCDIR ,(expand-file-name "~/.local/lazarus/fpc/3.2.2/sources")
-                                                                                                :LAZARUSDIR ,(expand-file-name "~/.local/lazarus")
-                                                                                                :FPCTARGET "aarch64-darwin"
-                                                                                                :FPCTARGETCPU "aarch64"))))
+                 '("\\.\\(pas\\|pp\\|lpr\\|dpr\\)\\'" . opascal-mode))
+    (add-to-list 'eglot-server-programs `((pascal-mode delphi-mode opascal-mode) . (,(expand-file-name "~/.local/bin/pasls") 
+                                                                                    :initializationOptions (:PP "~/.local/fpcupdeluxe/fpc/bin/aarch64-darwin/fpc.sh"
+                                                                                                                :FPCDIR ,(expand-file-name "~/.local/fpcupdeluxe/fpsrc")
+                                                                                                                :LAZARUSDIR ,(expand-file-name "~/.local/fpcupdeluxe/lazarus")
+                                                                                                                :FPCTARGET "aarch64-darwin"
+                                                                                                                :FPCTARGETCPU "aarch64"))))
+    ;; (tree-sitter-require 'opascal)
     :hook
-    ((fpc-mode . company-mode)
-     (fpc-mode . eglot-ensure)))
+    ((opascal-mode . company-mode)
+     (opascal-mode . tree-sitter-mode)
+     (opascal-mode . eglot-ensure)))
 #+END_SRC
 
 * 기타
