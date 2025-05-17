@@ -9,6 +9,7 @@
   - [[#elpaca-package-manager][Elpaca Package Manager]]
   - [[#eldoc][Eldoc]]
   - [[#enable-elpaka][Enable Elpaka]]
+  - [[#eldoc-1][Eldoc]]
   - [[#general-keybindings][General Keybindings]]
   - [[#back-파일-및-임시파일-이동][Back 파일 및 임시파일 이동]]
 - [[#diminish][Diminish]]
@@ -50,6 +51,7 @@
   - [[#sudo-edit][Sudo Edit]]
   - [[#exec-path-from-shell][Exec Path from shell]]
   - [[#android-tramp-설정][Android Tramp 설정]]
+  - [[#odin][ODIN]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -109,6 +111,7 @@
 ;    (provide 'eldoc))
 #+END_SRC
 
+
 ** Enable Elpaka
 
 #+BEGIN_SRC emacs-lisp
@@ -124,6 +127,19 @@
   (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 
 #+END_SRC
+
+** Eldoc
+
+#+BEGIN_SRC emacs-lisp
+  (unload-feature 'eldoc t)
+  (setq custom-delayed-init-variables '())
+  (defvar global-eldoc-mode nil)
+  (elpaca eldoc
+    (require 'eldoc)
+    (global-eldoc-mode)
+    (provide 'eldoc))
+#+END_SRC
+
 
 ** General Keybindings
 
@@ -641,23 +657,23 @@
 
 ** PASCAL (FPC)
 #+BEGIN_SRC emacs-lisp
-  (use-package fpc-mode
+  (use-package opascal-mode
     :ensure nil
-    :load-path "~/doc/emacs_2024/"
-    :commands fpc-mode
     :after (eglot)
     :init
     (add-to-list 'auto-mode-alist
-                 '("\\.\\(pas\\|pp\\|lpr\\|dpr\\)\\'" . fpc-mode))
-    (add-to-list 'eglot-server-programs `((pascal-mode fpc-mode) . (,(expand-file-name "~/.local/bin/pasls") 
-                                                                    :initializationOptions (:PP "/usr/local/bin/fpc"
-                                                                                                :FPCDIR ,(expand-file-name "~/.local/lazarus/fpc/3.2.2/sources")
-                                                                                                :LAZARUSDIR ,(expand-file-name "~/.local/lazarus")
-                                                                                                :FPCTARGET "aarch64-darwin"
-                                                                                                :FPCTARGETCPU "aarch64"))))
+                 '("\\.\\(pas\\|pp\\|lpr\\|dpr\\)\\'" . opascal-mode))
+    (add-to-list 'eglot-server-programs `((pascal-mode delphi-mode opascal-mode) . (,(expand-file-name "~/.local/bin/pasls") 
+                                                                                    :initializationOptions (:PP "~/.local/fpcupdeluxe/fpc/bin/aarch64-darwin/fpc.sh"
+                                                                                                                :FPCDIR ,(expand-file-name "~/.local/fpcupdeluxe/fpsrc")
+                                                                                                                :LAZARUSDIR ,(expand-file-name "~/.local/fpcupdeluxe/lazarus")
+                                                                                                                :FPCTARGET "aarch64-darwin"
+                                                                                                                :FPCTARGETCPU "aarch64"))))
+    ;; (tree-sitter-require 'opascal)
     :hook
-    ((fpc-mode . company-mode)
-     (fpc-mode . eglot-ensure)))
+    ((opascal-mode . company-mode)
+     (opascal-mode . tree-sitter-mode)
+     (opascal-mode . eglot-ensure)))
 #+END_SRC
 
 * 기타
@@ -722,3 +738,37 @@
      '(:application tramp :machine "android")
      'tramp-connection-local-termux-profile))
 #+END_SRC
+
+** ODIN
+*** Odin Mode
+
+
+#+begin_src emacs-lisp
+  ;; Enable odin-mode and configure OLS as the language server
+  (use-package odin-mode
+    :ensure (:host github :repo "mattt-b/odin-mode")
+    :mode ("\\.odin\\'" . odin-mode))
+
+  ;; Or use the WIP tree-sitter mode
+  (use-package odin-ts-mode
+    :ensure (:host github :repo "Sampie159/odin-ts-mode")
+    :mode ("\\.odin\\'" . odin-ts-mode)
+  )
+#+end_src
+
+
+*** Eglot ODIN mode
+
+#+begin_src emacs-lisp
+
+;; Add OLS to the list of available programs
+;; NOTE: As of Emacs 30, this is not needed.
+;(with-eval-after-load 'eglot
+;  (add-to-list 'eglot-server-programs '((odin-mode odin-ts-mode) . ("ols"))))
+
+;; Add a hook to autostart OLS
+(add-hook 'odin-mode-hook #'eglot-ensure)
+(add-hook 'odin-ts-mode-hook #'eglot-ensure) ;; If you're using the TS mode
+
+
+#+end_src
