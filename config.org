@@ -751,10 +751,4 @@
     :mode ("\\.odin\\'" . odin-mode)
     :hook (odin-mode . eglot-ensure))
 
-  ;; Or use the WIP tree-sitter mode
-  (use-package odin-ts-mode
-    :after eglot
-    :ensure (:host github :repo "Sampie159/odin-ts-mode")
-    :mode ("\\.odin\\'" . odin-ts-mode)
-    :hook (odin-ts-mode . eglot-ensure))
 #+end_src
