@@ -52,6 +52,7 @@
   - [[#exec-path-from-shell][Exec Path from shell]]
   - [[#android-tramp-설정][Android Tramp 설정]]
   - [[#odin][ODIN]]
+  - [[#ollama][Ollama]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -481,6 +482,9 @@
 ** Git (Magit)
 
 #+BEGIN_SRC emacs-lisp
+  ;;(use-package magit-section 
+  ;;  :ensure t)
+
   (use-package magit
   :ensure t
   :commands (magit-status)
@@ -493,6 +497,9 @@
     :ensure t
     :after magit)
 #+END_SRC
+
+#+RESULTS:
+: [nil 26768 3830 347673 nil elpaca-process-queues nil nil 0 nil]
 
 ** Markdown
 #+BEGIN_SRC emacs-lisp
@@ -533,7 +540,7 @@
 
 ** Eglot
 #+BEGIN_SRC emacs-lisp
-  
+
   (use-package eglot
     ;;:ensure (:inherit elpaca-menu-gnu-devel-elpa)
     :ensure nil
@@ -544,7 +551,7 @@
      (d-mode . eglot-ensure))
     :config 
     (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
-                                                                      "{\"clang\": {
+  														  "{\"clang\": {
           \"extraArgs\": [
             \"-isystem/usr/local/include\", 
             \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
@@ -555,7 +562,8 @@
           \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
         }
       }")))
-    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d"))))
+    (add-to-list 'eglot-server-programs '(d-mode . ("serve-d")))
+    (add-to-list 'eglot-server-programs '((odin-mode odin-ts-mode) . ("ols"))))
 
   (elpaca-wait)
 #+END_SRC
@@ -635,7 +643,7 @@
 
   (use-package rust-mode
     :ensure t
-    :after (eglot)
+    :after eglot
     :init
     (setq rust-mode-treesitter-derive t)
     (setq rust-rustfmt-bin (expand-file-name "~/.cargo/bin/rustfmt")
@@ -659,7 +667,7 @@
 #+BEGIN_SRC emacs-lisp
   (use-package opascal-mode
     :ensure nil
-    :after (eglot)
+    :after eglot
     :init
     (add-to-list 'auto-mode-alist
                  '("\\.\\(pas\\|pp\\|lpr\\|dpr\\)\\'" . opascal-mode))
@@ -754,4 +762,23 @@
     (add-to-list 'eglot-server-programs '((odin-mode  odin-ts-mode) . ("ols"))))
 
 
+
+  ;; Add OLS to the list of available programs
+  ;; NOTE: As of Emacs 30, this is not needed.
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '((odin-mode odin-ts-mode) . ("ols"))))
+
 #+end_src
+** Ollama
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ellama
+    :ensure t
+    :init
+    (require 'llm-ollama)
+    (setopt ellama-language "English")
+    (setopt ellama-provider
+  		  (make-llm-ollama
+  		   :chat-model "codellama" :embedding-model "codellama")))
+
+#+END_SRC
