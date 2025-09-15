@@ -749,6 +749,9 @@
     :after eglot
     :ensure (:host github :repo "mattt-b/odin-mode")
     :mode ("\\.odin\\'" . odin-mode)
-    :hook (odin-mode . eglot-ensure))
+    :hook (odin-mode . eglot-ensure)
+    :config
+    (add-to-list 'eglot-server-programs '((odin-mode  odin-ts-mode) . ("ols"))))
+
 
 #+end_src
