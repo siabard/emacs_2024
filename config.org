@@ -484,9 +484,12 @@
 #+BEGIN_SRC emacs-lisp
   ;;(use-package magit-section 
   ;;  :ensure t)
+  (use-package cond-let
+    :ensure t)
 
   (use-package magit
   :ensure t
+  :after cond-let
   :commands (magit-status)
   :bind (("C-x g" . magit-status))
   :config
@@ -776,6 +779,13 @@
     (setopt ellama-language "English")
     (setopt ellama-provider
   		  (make-llm-ollama
-  		   :chat-model "codellama" :embedding-model "codellama")))
+  		   :chat-model "codellama:7b" 
+  		   :embedding-model "nomic-embed-text"
+  		   :default-chat-non-standard-params '(("num_ctx" . 8192))))
+    (setopt ellama-coding-provider
+  	  (make-llm-ollama
+  	   :chat-model "qwen2.5-coder:7b"
+  	   :embedding-model "nomic-embed-text"
+  	   :default-chat-non-standard-params '(("num_ctx" . 32768)))))
 
 #+END_SRC
