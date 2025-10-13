@@ -424,6 +424,13 @@
     :hook
     (d-mode . flycheck-dmd-dub-set-variables)
     )
+
+  (use-package flycheck-eglot
+    :ensure t
+    :after (flycheck eglot)
+    :config
+    (global-flycheck-eglot-mode 1))
+    
 #+END_SRC
 
 ** Company
@@ -551,15 +558,14 @@
      (d-mode . eglot-ensure))
     :config 
     (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
-  														  "{\"clang\": {
+                                                                                                                  "{\"clang\": {
           \"extraArgs\": [
-            \"-isystem/usr/local/include\", 
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0/include\", 
+            \"-isystem/usr/local/include\", \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/12.0.0/include\", 
             \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
             \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
             \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
           ],
-          \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/15.0.0\"
+          \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/12.0.0\"
         }
       }")))
     (add-to-list 'eglot-server-programs '(d-mode . ("serve-d")))
@@ -618,7 +624,9 @@
 #+BEGIN_SRC emacs-lisp
 
   (use-package ccls
-      :ensure t )
+      :ensure t 
+      :config
+      (setq ccls-executable "~/.local/bin/ccls"))
 
 #+END_SRC
 
