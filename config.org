@@ -53,6 +53,8 @@
   - [[#android-tramp-설정][Android Tramp 설정]]
   - [[#odin][ODIN]]
   - [[#ollama][Ollama]]
+  - [[#treesitter][TreeSitter]]
+  - [[#format-all][Format All]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -800,3 +802,34 @@
   	   :default-chat-non-standard-params '(("num_ctx" . 32768)))))
 
 #+END_SRC
+
+** TreeSitter 
+
+Lua 의 경우 버전 낮춘다.
+#+begin_src emacs-lisp
+  (add-to-list
+   'treesit-language-source-alist
+   '(lua
+     "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
+   t)
+
+#+end_src
+
+
+** Format All
+#+begin_src emacs-lisp
+      (use-package format-all
+        :ensure t
+        :preface
+        (defun ian/format-code ()
+          "Auto-format whole buffer."
+          (interactive)
+          (if (derived-mode-p 'prolog-mode)
+              (prolog-indent-buffer)
+            (format-all-buffer)))
+        :config
+        (global-set-key (kbd "M-F") #'ian/format-code)
+        (add-hook 'prog-mode-hook #'format-all-ensure-formatter)
+        )
+
+#+end_src
