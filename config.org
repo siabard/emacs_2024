@@ -55,6 +55,8 @@
   - [[#ollama][Ollama]]
   - [[#treesitter][TreeSitter]]
   - [[#format-all][Format All]]
+- [[#바이브-코딩][바이브 코딩]]
+  - [[#minuet][minuet]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -819,18 +821,55 @@ Lua 의 경우 버전 낮춘다.
 
 ** Format All
 #+begin_src emacs-lisp
-      (use-package format-all
-        :ensure t
-        :preface
-        (defun ian/format-code ()
-          "Auto-format whole buffer."
-          (interactive)
-          (if (derived-mode-p 'prolog-mode)
-              (prolog-indent-buffer)
-            (format-all-buffer)))
-        :config
-        (global-set-key (kbd "M-F") #'ian/format-code)
-        (add-hook 'prog-mode-hook #'format-all-ensure-formatter)
-        )
+  (use-package format-all
+    :ensure t
+    :preface
+    (defun ian/format-code ()
+      "Auto-format whole buffer."
+      (interactive)
+      (if (derived-mode-p 'prolog-mode)
+          (prolog-indent-buffer)
+        (format-all-buffer)))
+    :config
+    (global-set-key (kbd "M-F") #'ian/format-code)
+    (add-hook 'prog-mode-hook #'format-all-ensure-formatter)
+    )
 
+#+end_src
+
+
+* 바이브 코딩  
+
+** minuet
+
+#+begin_src emacs-lisp
+  (use-package minuet
+    :ensure t
+    :bind
+    (("M-y" . #'minuet-complete-with-minibuffer) ;; use minibuffer for completion
+     ("M-i" . #'minuet-show-suggestion) ;; use overlay for completion
+     ("C-c m" . #'minuet-configure-provider)
+     :map minuet-active-mode-map
+     ;; These keymaps activate only when a minuet suggestion is displayed in the current buffer
+     ("M-p" . #'minuet-previous-suggestion) ;; invoke completion or cycle to next completion
+     ("M-n" . #'minuet-next-suggestion) ;; invoke completion or cycle to previous completion
+     ("M-A" . #'minuet-accept-suggestion) ;; accept whole completion
+     ;; Accept the first line of completion, or N lines with a numeric-prefix:
+     ;; e.g. C-u 2 M-a will accepts 2 lines of completion.
+     ("M-a" . #'minuet-accept-suggestion-line)
+     ("M-e" . #'minuet-dismiss-suggestion))
+    
+    :init
+    ;; if you want to enable auto suggestion.
+    ;; Note that you can manually invoke completions without enable minuet-auto-suggestion-mode
+    (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
+    :config
+    (setq minuet-provider 'openai-fim-compatible)
+    (setq minuet-n-completions 1)
+    (setq minuet-context-window 512)
+    (plist-put minuet-openai-fim-compatible-options :end-poiint "http://localhost:11434/v1/completions")
+    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
+    (plist-put minuet-openai-fim-compatible options :api-key "TERM")
+    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-code:7b")
+    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56))
 #+end_src
