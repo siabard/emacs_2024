@@ -418,6 +418,7 @@
     :init (global-flycheck-mode))
 
   (use-package flycheck-dmd-dub
+    :after (flycheck d-mode)
     :ensure 
     ( :package "flycheck-dmd-dub"
       :repo "atilaneves/flycheck-dmd-dub"
@@ -729,8 +730,7 @@
   (use-package exec-path-from-shell
     :ensure t
     :config 
-    (when (memq window-system '(mac ns x))
-      (exec-path-from-shell-initialize)))
+    (exec-path-from-shell-initialize))
 #+END_SRC
 
 ** Android Tramp 설정
