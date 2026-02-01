@@ -33,7 +33,7 @@
 - [[#프로그래밍-지원][프로그래밍 지원]]
   - [[#rainbow-mode][Rainbow Mode]]
   - [[#flycheck][FlyCheck]]
-  - [[#company][Company]]
+  - [[#corfu][Corfu]]
   - [[#ivy][IVY]]
   - [[#git-magit][Git (Magit)]]
   - [[#markdown][Markdown]]
@@ -46,6 +46,7 @@
   - [[#d-lang][D-lang]]
   - [[#rust--rust-mode][Rust  (RUST mode)]]
   - [[#pascal-fpc][PASCAL (FPC)]]
+  - [[#typescript][Typescript]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
   - [[#sudo-edit][Sudo Edit]]
@@ -55,6 +56,8 @@
   - [[#ollama][Ollama]]
   - [[#treesitter][TreeSitter]]
   - [[#format-all][Format All]]
+- [[#바이브-코딩][바이브 코딩]]
+  - [[#aider][Aider]]
   - [[#gptel][gptel]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
@@ -419,6 +422,7 @@
     :init (global-flycheck-mode))
 
   (use-package flycheck-dmd-dub
+    :after (flycheck d-mode)
     :ensure 
     ( :package "flycheck-dmd-dub"
       :repo "atilaneves/flycheck-dmd-dub"
@@ -436,25 +440,42 @@
     
 #+END_SRC
 
-** Company
+** Corfu
+
 
 #+BEGIN_SRC emacs-lisp
-  (use-package company
+  (use-package corfu
     :ensure t
+    :init
+    (global-corfu-mode) ;; 전역 모드 활성화
     :custom
-    (company-begin-commands '(self-insert-command))
-    (company-idle-delay .1)
-    (company-minimum-prefix-length 2)
-    (company-show-numbers t)
-    (company-tooltip-align-annotations 't)
-    (global-company-mode t))
+    (corfu-auto t)                 ;; 타이핑 시 자동으로 팝업 띄우기 (Company의 idle-delay 역할)
+    (corfu-auto-delay 0.2)         ;; 0.2초 후 팝업 (취향에 맞게 조절)
+    (corfu-auto-prefix 2)          ;; 2글자 이상 쳤을 때 팝업
+    (corfu-cycle t)                ;; 목록 끝에서 처음으로 순환
+    (corfu-quit-no-match 'separator) ;; 매칭되는 게 없으면 팝업 끄기
+    (corfu-preselect 'prompt)      ;; 첫 번째 항목을 바로 선택하지 않음 (엔터 실수 방지)
+    :bind
+        (:map corfu-map
+              ("SPC" . corfu-insert-separator) ;; 공백 입력 시 필터링 구분자로 사용
+              ("TAB" . corfu-next)
+              ([tab] . corfu-next)
+              ("S-TAB" . corfu-previous)
+              ([backtab] . corfu-previous)))
 
-  (use-package company-box
+  (use-package nerd-icons-corfu
     :ensure t
-    :after company
-    :diminish
-    :hook (company-mode . company-box-mode))
+    :after corfu
+    :config
+    (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
+  (use-package cape
+    :ensure t
+    :init
+    ;; 기본 completion-at-point-functions에 cape 기능들을 추가
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev) ;; 현재 버퍼 단어
+    (add-to-list 'completion-at-point-functions #'cape-file)    ;; 파일 경로
+    (add-to-list 'completion-at-point-functions #'cape-elisp-block)) ;; Org 모드 내 코드 블록
 #+END_SRC
 
 ** IVY
@@ -555,28 +576,32 @@
 #+BEGIN_SRC emacs-lisp
 
   (use-package eglot
-    ;;:ensure (:inherit elpaca-menu-gnu-devel-elpa)
+      ;;:ensure (:inherit elpaca-menu-gnu-devel-elpa)
     :ensure nil
     :demand t
     :after (jsonrpc)
     :hook
     (((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . eglot-ensure)
-     (d-mode . eglot-ensure))
+     (d-mode . eglot-ensure)
+     (typescript-ts-mode . eglot-ensure)
+     (tsx-ts-mode . eglot-ensure)
+     (js-ts-mode . eglot-ensure))
     :config 
     (add-to-list 'eglot-server-programs '((c-mode c-ts-mode c++-mode c++-ts-mode c-or-c++-mode c-or-c++-ts-mode) . ("ccls" "--init"
-                                                                                                                  "{\"clang\": {
-          \"extraArgs\": [
-            \"-isystem/usr/local/include\", \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/12.0.0/include\", 
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
-            \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\"
-          ],
-          \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/12.0.0\"
-        }
-      }")))
+                                                                                                                    "{\"clang\": {
+            \"extraArgs\": [
+              \"-isystem/usr/local/include\", \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/12.0.0/include\", 
+              \"-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",
+              \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\", 
+              \"-isystem/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks\",
+              \"-isystem/opt/homebrew/include\"
+            ],
+            \"resourceDir\": \"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/12.0.0\"
+          }
+        }")))
     (add-to-list 'eglot-server-programs '(d-mode . ("serve-d")))
     (add-to-list 'eglot-server-programs '((odin-mode odin-ts-mode) . ("ols"))))
-
+  (electric-pair-mode 1)
   (elpaca-wait)
 #+END_SRC
 
@@ -641,13 +666,7 @@
 #+BEGIN_SRC emacs-lisp
   (use-package d-mode
     :ensure t
-    :hook (d-mode . company-mode)
-    )
-
-  (use-package company-dcd 
-    :ensure t
-    :after d-mode
-    :hook (d-mode . company-dcd-mode))
+    :hook (d-mode . corfu-mode))
 #+END_SRC
 
 
@@ -672,7 +691,7 @@
                                c-basic-offset 4
                                fill-column 120)))
     :hook 
-    (((rust-mode rust-ts-mode) . company-mode)
+    (((rust-mode rust-ts-mode) . corfu-mode)
      ((rust-mode rust-ts-mode) . eglot-ensure)))
 
 #+END_SRC
@@ -693,11 +712,20 @@
                                                                                                                 :FPCTARGETCPU "aarch64"))))
     ;; (tree-sitter-require 'opascal)
     :hook
-    ((opascal-mode . company-mode)
+    ((opascal-mode . corfu-mode)
      (opascal-mode . tree-sitter-mode)
      (opascal-mode . eglot-ensure)))
 #+END_SRC
 
+** Typescript
+
+#+begin_src emacs-lisp
+  (setq major-mode-remap-alist
+        '((typescript-mode . typescript-ts-mode)
+  	(js-mode . js-ts-mode)
+  	(css-mode . css-ts-mode)
+  	(json-mode . json-ts-mode)))
+#+end_src
 * 기타
 
 
@@ -729,8 +757,7 @@
   (use-package exec-path-from-shell
     :ensure t
     :config 
-    (when (memq window-system '(mac ns x))
-      (exec-path-from-shell-initialize)))
+    (exec-path-from-shell-initialize))
 #+END_SRC
 
 ** Android Tramp 설정
@@ -809,56 +836,82 @@
 
 Lua 의 경우 버전 낮춘다.
 #+begin_src emacs-lisp
-  (add-to-list
-   'treesit-language-source-alist
-   '(lua
-     "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
-   t)
+  (let ((new-langs
+         '((lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
+  	 (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+  	 (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+  	 (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))))
+    
+    ;; 2. 반복문을 돌면서 기존 설정을 갱신
+    (dolist (lang-def new-langs)
+      (let ((lang-symbol (car lang-def)))
+        ;; (1) 기존 리스트에서 해당 언어(키)가 있다면 삭제
+        (setq treesit-language-source-alist
+              (assq-delete-all lang-symbol treesit-language-source-alist))
+        ;; (2) 새 설정을 리스트에 추가
+        (add-to-list 'treesit-language-source-alist lang-def))))
+
+#+end_src
+
+** Format All
+#+begin_src emacs-lisp
+  (use-package format-all
+    :ensure t
+    :preface
+    (defun ian/format-code ()
+      "Auto-format whole buffer."
+      (interactive)
+      (if (derived-mode-p 'prolog-mode)
+          (prolog-indent-buffer)
+        (format-all-buffer)))
+    :config
+    (global-set-key (kbd "M-F") #'ian/format-code)
+    (add-hook 'prog-mode-hook #'format-all-ensure-formatter)
+    )
 
 #+end_src
 
 
-** Format All
+* 바이브 코딩  
+
+** Aider
+
 #+begin_src emacs-lisp
-      (use-package format-all
-        :ensure t
-        :preface
-        (defun ian/format-code ()
-          "Auto-format whole buffer."
-          (interactive)
-          (if (derived-mode-p 'prolog-mode)
-              (prolog-indent-buffer)
-            (format-all-buffer)))
-        :config
-        (global-set-key (kbd "M-F") #'ian/format-code)
-        (add-hook 'prog-mode-hook #'format-all-ensure-formatter)
-        )
+
+  (use-package aidermacs
+    :ensure t
+    :bind (("C-c a" . aidermacs-transient-menu))
+    :custom
+    ;;See the Configuration section below
+    (aidermacs-default-chat-mode 'architect)
+    ;;(aidermacs-default-model "gemini")
+    )
 
 #+end_src
 
 ** gptel
 
 #+begin_src emacs-lisp
-(use-package gptel
-  :ensure t
-  :config
-  ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
-  (defvar my/gemini-api-key-cache nil
-    "Gemini API 키를 현재 Emacs 세션 동안만 저장하는 변수")
+  (use-package gptel
+    :ensure t
+    :config
+    ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
+    (defvar my/gemini-api-key-cache nil
+      "Gemini API 키를 현재 Emacs 세션 동안만 저장하는 변수")
 
-  ;; 2. 키를 요청하는 함수 정의
-  (defun my/get-gemini-key ()
-    "변수에 키가 있으면 반환하고, 없으면 사용자에게 비밀번호처럼 물어본 뒤 저장합니다."
-    (or my/gemini-api-key-cache
-        ;; read-passwd는 입력 문자를 *로 가려줍니다.
-        (setq my/gemini-api-key-cache (read-passwd "Gemini API Key를 입력하세요: "))))
+    ;; 2. 키를 요청하는 함수 정의
+    (defun my/get-gemini-key ()
+      "변수에 키가 있으면 반환하고, 없으면 사용자에게 비밀번호처럼 물어본 뒤 저장합니다."
+      (or my/gemini-api-key-cache
+          ;; read-passwd는 입력 문자를 *로 가려줍니다.
+          (setq my/gemini-api-key-cache (read-passwd "Gemini API Key를 입력하세요: "))))
 
-  ;; 3. Gemini 설정에 '함수'를 전달
-  (gptel-make-gemini "Gemini"
-    :key #'my/get-gemini-key  ;; (문자열 변수 대신 함수명 전달)
-    :stream t)
+    ;; 3. Gemini 설정에 '함수'를 전달
+    (gptel-make-gemini "Gemini"
+      :key #'my/get-gemini-key  ;; <--- 여기가 핵심입니다 (문자열 변수 대신 함수명 전달)
+      :stream t)
 
-  ;; 4. 기본 모델 설정
-  (setq gptel-model 'gemini-2.5-flash)
-  (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t)))
+    ;; 4. 기본 모델 설정
+    (setq gptel-model 'gemini-2.5-flash)
+    (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t)))
 #+end_src
