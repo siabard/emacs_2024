@@ -59,6 +59,7 @@
 - [[#바이브-코딩][바이브 코딩]]
   - [[#aider][Aider]]
   - [[#gptel][gptel]]
+  - [[#gptel-mcp][GPTEL MCP]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -950,4 +951,21 @@ Lua 의 경우 버전 낮춘다.
       '("L" "Load Directives File" my/gptel-load-directives-from-menu))
     
     )
+#+end_src
+
+
+** GPTEL MCP
+
+#+begin_src emacs-lisp 
+
+  (use-package mcp 
+    :ensure t
+    :after gptel
+    :custom (mcp-hub-servers
+             `(("filesystem" . (:command "npx" 
+  				       :args ("-y" "@modelcontextprotocol/server-filesystem")
+  				       :roots ("/home/lizqwer/MyProject/")))
+               ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))))
+    :config (require 'mcp-hub)
+    :hook (after-init . mcp-hub-start-all-server))
 #+end_src
