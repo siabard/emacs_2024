@@ -965,7 +965,10 @@ Lua 의 경우 버전 낮춘다.
              `(("filesystem" . (:command "npx" 
   				       :args ("-y" "@modelcontextprotocol/server-filesystem")
   				       :roots ("/home/lizqwer/MyProject/")))
-               ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))))
+               ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
+  	     ("mcp-shell-server" . (:command "uvx"
+  					     :args ("mcp-shell-server")
+  					     :env (:ALLOW_COMMANDS "bc,cat,chmod,curl,date,echo,emacs,find,git,grep,gunzip,head,jq,kubectl,ls,lynx,npm,psql,pwd,python,rg,sed,sqlite3,tail,unzip,wc")))))
     :config (require 'mcp-hub)
     :hook (after-init . mcp-hub-start-all-server))
 #+end_src
