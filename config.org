@@ -895,6 +895,8 @@ Lua 의 경우 버전 낮춘다.
   (use-package gptel
     :ensure t
     :config
+    (require 'org)
+    (require 'transient)
     ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
     (defvar my/gemini-api-key-cache nil
       "Gemini API 키를 현재 Emacs 세션 동안만 저장하는 변수")
@@ -908,10 +910,44 @@ Lua 의 경우 버전 낮춘다.
 
     ;; 3. Gemini 설정에 '함수'를 전달
     (gptel-make-gemini "Gemini"
-      :key #'my/get-gemini-key  ;; <--- 여기가 핵심입니다 (문자열 변수 대신 함수명 전달)
+      :key #'my/get-gemini-key  ;; 여기가 핵심입니다 (문자열 변수 대신 함수명 전달)
       :stream t)
 
     ;; 4. 기본 모델 설정
     (setq gptel-model 'gemini-2.5-flash)
-    (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t)))
+    (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t))
+
+
+    ;; 5. org 파일을 파싱하여 지시문(Directives)로 변환하는 함수 
+    (defun my/gptel-parse-org-directives (file)
+      "ORG 파일을 읽어 (KEY . CONTENT) 형태 리스트로 만들기"
+      (with-temp-buffer 
+        (insert-file-contens file)
+        (org-mode)
+        (let (directives)
+  	  (org-map-entires 
+  	   (lambda ()
+  	     (let* ((heading (org-get-heading t t t t))
+  		    (key (intern (replace-regexp-in-string " " "-" (downcase heading))))
+  		    (content (org-get-entry)))
+  	       (when (and heading content)
+  		 (push (cons key content) directives)))))
+  	  (nreverse directiv))))
+
+    ;; 6. 메뉴에서 실행할 명령어 정의 
+    (defun my/gptel-load-directives-from-menu (file)
+      "메뉴에서 파일을 선택해 gptel-directives에 추가"
+      (interactive "fSelect Directives Org File: ") 
+      (let ((new-directives (my/gptel-parse-org-directives file)))
+        (if new-directives 
+  	  (progn 
+  	    (setq gptel-directives (append gptel-directives new-directives))
+  	    (message "Loaded %d directives from %s" (length new-directives) file))
+  	(message "No directives found in file."))))
+
+    ;; 7. gptel-menu 
+    (transient-append-suffix 'gptel-menu '(0)
+      '("L" "Load Directives File" my/gptel-load-directives-from-menu))
+    
+    )
 #+end_src
