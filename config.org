@@ -895,9 +895,12 @@ Lua 의 경우 버전 낮춘다.
 #+begin_src emacs-lisp
   (use-package gptel
     :ensure t
+    :bind (("C-c RET" . gptel-send))
     :config
     (require 'org)
     (require 'transient)
+    (require 'gptel-integrations)
+    (require 'gptel-org)
     ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
     (defvar my/gemini-api-key-cache nil
       "Gemini API 키를 현재 Emacs 세션 동안만 저장하는 변수")
@@ -947,9 +950,10 @@ Lua 의 경우 버전 낮춘다.
   	(message "No directives found in file."))))
 
     ;; 7. gptel-menu 
-    (transient-append-suffix 'gptel-menu '(0)
-      '("L" "Load Directives File" my/gptel-load-directives-from-menu))
-    
+    (with-eval-after-load 'gptel-transient 
+      (transient-append-suffix 'gptel-menu 'gptel--infix-add-directive
+  	'("L" "Load Directives File" my/gptel-load-directives-from-menu))
+      )   
     )
 #+end_src
 
