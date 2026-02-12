@@ -60,6 +60,7 @@
   - [[#aider][Aider]]
   - [[#gptel][gptel]]
   - [[#gptel-mcp][GPTEL MCP]]
+  - [[#gptel-directives][GPTEL directives]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -953,7 +954,16 @@ Lua 의 경우 버전 낮춘다.
     (with-eval-after-load 'gptel-transient 
       (transient-append-suffix 'gptel-menu 'gptel--infix-add-directive
   	'("L" "Load Directives File" my/gptel-load-directives-from-menu))
-      )   
+      )
+    (add-to-list 'gptel-prompt-prefix-alist `(org-mode . ,(concat "*** ian " (format-time-string "[%Y-%m-%d]") "\n")))
+    :custom
+    (gptel-default-mode 'org-mode)
+    (gptel-expert-commands t)
+    (gptel-track-media t)
+    (gptel-include-reasoning 'ignore)
+    (gptel-prompt-prefix-alist
+     '((markdown-mode . "### ") (org-mode . "*** ian\12") (text-mode . "### ")))
+    (gptel-log-level 'info)
     )
 #+end_src
 
@@ -975,4 +985,22 @@ Lua 의 경우 버전 낮춘다.
   					     :env (:ALLOW_COMMANDS "bc,cat,chmod,curl,date,echo,emacs,find,git,grep,gunzip,head,jq,kubectl,ls,lynx,npm,psql,pwd,python,rg,sed,sqlite3,tail,unzip,wc")))))
     :config (require 'mcp-hub)
     :hook (after-init . mcp-hub-start-all-server))
+#+end_src
+
+** GPTEL directives 
+
+#+begin_src emacs-lisp
+
+  (use-package gptel-prompts
+    ;; git clone git@github.com:jwiegley/gptel-prompts.git 
+    :ensure nil
+    :load-path (lambda () (expand-file-name "~/project/ai/gptel-prompts"))
+    :after (gptel)
+    :config
+    (custom-set-variables '(gptel-prompts-directory "~/projects/ai/composable-prompts"))
+    (gptel-prompts-update)
+    ;; ensure prompts are updated if prompt files change
+    (gptel-prompts-add-update-watchers))
+    
+
 #+end_src
