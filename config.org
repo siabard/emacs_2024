@@ -978,7 +978,7 @@ Lua 의 경우 버전 낮춘다.
     :custom (mcp-hub-servers
              `(("filesystem" . (:command "npx" 
   				       :args ("-y" "@modelcontextprotocol/server-filesystem")
-  				       :roots ("/home/lizqwer/MyProject/")))
+  				       :roots ("/Users/siabard/sandbox/")))
                ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
   	     ("mcp-shell-server" . (:command "uvx"
   					     :args ("mcp-shell-server")
