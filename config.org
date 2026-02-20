@@ -914,13 +914,27 @@ Lua 의 경우 버전 낮춘다.
           (setq my/gemini-api-key-cache (read-passwd "Gemini API Key를 입력하세요: "))))
 
     ;; 3. Gemini 설정에 '함수'를 전달
-    (gptel-make-gemini "Gemini"
-      :key #'my/get-gemini-key  ;; 여기가 핵심입니다 (문자열 변수 대신 함수명 전달)
-      :stream t)
+    ;;; (gptel-make-gemini "Gemini"
+    ;;;   :key #'my/get-gemini-key  ;; 여기가 핵심입니다 (문자열 변수 대신 함수명 전달)
+    ;;;   :stream t)
 
     ;; 4. 기본 모델 설정
-    (setq gptel-model 'gemini-2.5-flash)
-    (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t))
+    ;;; (setq gptel-model 'gemini-2.5-flash) ;; 기본 gemini 사용함 
+    ;;; (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t))
+
+    (setq gptel-model   'arcee-ai/trinity-large-preview:free
+      gptel-backend
+      (gptel-make-openai "OpenRouter"               ;Any name you want
+        :host "openrouter.ai"
+        :endpoint "/api/v1/chat/completions"
+        :stream t
+        :key #'my/get-gemini-key                   ;can be a function that returns the key
+        :models '(google/gemma-3-27b-it:free
+                  arcee-ai/trinity-large-preview:free
+  		deepseek/deepseek-r1-0528:free
+  		meta-llama/llama-3.3-70b-instruct:free
+  		openai/gpt-oss-120b:free)))
+
 
 
     ;; 5. org 파일을 파싱하여 지시문(Directives)로 변환하는 함수 
