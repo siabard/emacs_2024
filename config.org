@@ -1011,7 +1011,7 @@ Lua 의 경우 버전 낮춘다.
     :load-path (lambda () (expand-file-name "~/project/ai/gptel-prompts"))
     :after (gptel)
     :config
-    (custom-set-variables '(gptel-prompts-directory "~/projects/ai/composable-prompts"))
+    (custom-set-variables '(gptel-prompts-directory "~/project/ai/composable-prompts"))
     (gptel-prompts-update)
     ;; ensure prompts are updated if prompt files change
     (gptel-prompts-add-update-watchers))
