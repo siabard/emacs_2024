@@ -904,14 +904,14 @@ Lua 의 경우 버전 낮춘다.
     (require 'gptel-org)
     ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
     (defvar my/gemini-api-key-cache nil
-      "Gemini API 키를 현재 Emacs 세션 동안만 저장하는 변수")
+      "API 키를 현재 Emacs 세션 동안만 저장하는 변수")
 
     ;; 2. 키를 요청하는 함수 정의
     (defun my/get-gemini-key ()
       "변수에 키가 있으면 반환하고, 없으면 사용자에게 비밀번호처럼 물어본 뒤 저장합니다."
       (or my/gemini-api-key-cache
           ;; read-passwd는 입력 문자를 *로 가려줍니다.
-          (setq my/gemini-api-key-cache (read-passwd "Gemini API Key를 입력하세요: "))))
+          (setq my/gemini-api-key-cache (read-passwd "API Key를 입력하세요: "))))
 
     ;; 3. Gemini 설정에 '함수'를 전달
     ;;; (gptel-make-gemini "Gemini"
