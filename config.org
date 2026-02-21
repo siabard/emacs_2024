@@ -941,17 +941,17 @@ Lua 의 경우 버전 낮춘다.
     (defun my/gptel-parse-org-directives (file)
       "ORG 파일을 읽어 (KEY . CONTENT) 형태 리스트로 만들기"
       (with-temp-buffer 
-        (insert-file-contens file)
+        (insert-file-contents file)
         (org-mode)
         (let (directives)
-  	  (org-map-entires 
+  	  (org-map-entries 
   	   (lambda ()
   	     (let* ((heading (org-get-heading t t t t))
   		    (key (intern (replace-regexp-in-string " " "-" (downcase heading))))
   		    (content (org-get-entry)))
   	       (when (and heading content)
   		 (push (cons key content) directives)))))
-  	  (nreverse directiv))))
+  	  (nreverse directives))))
 
     ;; 6. 메뉴에서 실행할 명령어 정의 
     (defun my/gptel-load-directives-from-menu (file)
@@ -1007,14 +1007,49 @@ Lua 의 경우 버전 낮춘다.
 
   (use-package gptel-prompts
     ;; git clone git@github.com:jwiegley/gptel-prompts.git 
-    :ensure nil
-    :load-path (lambda () (expand-file-name "~/project/ai/gptel-prompts"))
-    :after (gptel)
+    :ensure (:host github :repo "jwiegley/gptel-prompts")
+    :after gptel
     :config
-    (custom-set-variables '(gptel-prompts-directory "~/project/ai/composable-prompts"))
+    (setq gptel-prompts-directory (expand-file-name "~/project/ai/composable-prompts"))
     (gptel-prompts-update)
     ;; ensure prompts are updated if prompt files change
-    (gptel-prompts-add-update-watchers))
-    
+    (gptel-prompts-add-update-watchers))          
 
 #+end_src
+
+#+begin_src emacs-lisp
+  (defun my/gptel-compose-prompts ()
+    "composable-prompts 디렉토리에서 여러 파일을 선택해 하나의 시스템 프롬프트로 병합합니다.
+  여러 개를 선택할 때는 콤마(,)로 구분하세요."
+    (interactive)
+    (let* ((prompt-dir (expand-file-name "~/project/ai/composable-prompts"))
+           ;; 디렉토리 내의 모든 .md 및 .txt 파일 검색
+           (files (directory-files-recursively prompt-dir "\\.md\\'\\|\\.txt\\'"))
+           ;; 파일 경로를 디렉토리 기준 상대 경로로 변환 (보기 좋게)
+           (file-names (mapcar (lambda (f) (file-relative-name f prompt-dir)) files))
+           ;; completing-read-multiple (CRM)을 사용하여 여러 파일 선택
+           (selected (completing-read-multiple "프롬프트 블록 선택 (콤마로 구분): " file-names))
+           (combined-prompt ""))
+      
+      (when selected
+        ;; 선택된 파일들의 내용을 하나로 이어 붙임
+        (dolist (sel selected)
+          (let ((filepath (expand-file-name sel prompt-dir)))
+            (with-temp-buffer
+              (insert-file-contents filepath)
+              (setq combined-prompt (concat combined-prompt 
+                                            (format "\n\n### [%s]\n" (file-name-base sel))
+                                            (buffer-string))))))
+        
+        ;; 임시 Directives 이름 생성 및 gptel에 적용
+        (let ((directive-name (intern (mapconcat 'file-name-base selected "+"))))
+          (add-to-list 'gptel-directives (cons directive-name combined-prompt))
+          (setq gptel--system-message combined-prompt)
+          (message "✅ 프롬프트 조합 완료: %s" directive-name)))))
+
+  ;; 단축키 등록
+  (with-eval-after-load 'gptel
+    (define-key gptel-mode-map (kbd "C-c g c") 'my/gptel-compose-prompts))
+
+#+end_src
+
