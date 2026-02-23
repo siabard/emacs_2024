@@ -61,6 +61,8 @@
   - [[#gptel][gptel]]
   - [[#gptel-mcp][GPTEL MCP]]
   - [[#gptel-directives][GPTEL directives]]
+  - [[#gptel-로-common-lisp-refactoring-직접-요청][GPTEL 로 Common lisp Refactoring 직접 요청]]
+  - [[#gptel-tool][GPTEL tool]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -991,7 +993,11 @@ Lua 의 경우 버전 낮춘다.
     :after gptel
     :custom (mcp-hub-servers
              `(("filesystem" . (:command "npx" 
-  				       :args ("-y" "@modelcontextprotocol/server-filesystem")
+  				       :args (
+  					      "-y" 
+  					      "@modelcontextprotocol/server-filesystem"
+  					      "/Users/siabard/sandbox"
+  					      )
   				       :roots ("/Users/siabard/sandbox/")))
                ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
   	     ("mcp-shell-server" . (:command "uvx"
@@ -1053,3 +1059,106 @@ Lua 의 경우 버전 낮춘다.
 
 #+end_src
 
+** GPTEL 로 Common lisp Refactoring 직접 요청 
+
+#+begin_src emacs-lisp
+
+  (defun my/gptel-refactor-lisp-defun ()
+    "현재 커서가 위치한 Lisp 함수(defun)를 잡아서 gptel에게 리팩토링을 요청합니다."
+    (interactive)
+    (let* ((defun-str (save-excursion
+                        (mark-defun) ;; 현재 함수 전체 선택
+                        (buffer-substring-no-properties (region-beginning) (region-end))))
+           (prompt (read-string "Refactor Request (e.g., Optimize, Add comments): "
+                                "Optimize this Common Lisp code and explain why.")))
+      ;; gptel 버퍼를 열고 내용을 전송
+      (gptel-request
+       defun-str
+       :system "You are a Common Lisp Expert."
+       :context (list (cons 'major-mode major-mode)) ;; 현재 모드 정보 전달
+       :callback (lambda (response info)
+                   (if response
+                       (with-current-buffer (get-buffer-create "*Gptel-Refactor*")
+                         (erase-buffer)
+                         (insert response)
+                         (common-lisp-mode) ;; 결과창도 리스프 모드로
+                         (display-buffer (current-buffer)))
+                     (message "Gptel request failed."))))))
+
+  ;; 키바인딩 (Lisp 모드에서만 동작)
+  (with-eval-after-load 'slime
+    (define-key slime-mode-map (kbd "C-c g r") 'my/gptel-refactor-lisp-defun))
+
+#+end_src
+
+
+** GPTEL tool
+
+#+begin_src emacs-lisp
+  (with-eval-after-load 'gptel
+    (gptel-make-tool
+     :name "read_pdf"
+     :description "주어진 경로의 PDF 파일에서 텍스트를 추출하여 읽어옵니다. PDF 문서의 내용을 파악하거나 요약해야 할 때 사용하세요."
+     :args (list '(:name "filepath" :type string :description "읽어올 PDF 파일의 절대 경로 (예: /Users/siabard/sandbox/document.pdf)"))
+     :category "file"
+     :function (lambda (filepath)
+                 (cond
+    		;; 1. 파일 존재 여부 확인
+    		((not (file-exists-p filepath))
+    		 (format "Error: 파일을 찾을 수 없습니다: %s" filepath))
+    		
+    		;; 2. CLI 도구 설치 여부 확인
+    		((not (executable-find "pdftotext"))
+    		 "Error: 시스템에 'pdftotext' 명령어가 없습니다. 터미널에서 'brew install poppler'를 실행해 주세요.")
+    		
+    		;; 3. 텍스트 추출 실행
+    		(t
+    		 ;; pdftotext <파일경로> - (표준 출력으로 텍스트 반환)
+    		 (let ((text (shell-command-to-string 
+                                (format "pdftotext %s -" (shell-quote-argument filepath)))))
+                     (if (string-empty-p (string-trim text))
+                         "Error: 문서에서 텍스트를 추출할 수 없습니다. (스캔된 이미지로만 구성된 PDF일 수 있습니다.)"
+                       text))))))
+
+
+    (gptel-make-tool
+     :name "read_pypdf"
+     :description "주어진 경로의 PDF 파일에서 텍스트를 추출하여 읽어옵니다. PDF 문서의 내용을 파악하거나 요약해야 할 때 사용하세요."
+     :args '((:name "filepath" :type string :description "읽어올 PDF 파일의 절대 경로 (예: /Users/siabard/sandbox/document.pdf)"))
+     :category "file"
+     :function (lambda (filepath)
+                 (cond
+  		;; 1. 파일 존재 여부 확인
+  		((not (file-exists-p filepath))
+  		 (format "Error: 파일을 찾을 수 없습니다: %s" filepath))
+  		
+  		;; 2. 파이썬 명령어 확인
+  		((not (executable-find "python3"))
+  		 "Error: 시스템에 'python3' 명령어가 없습니다.")
+  		
+  		;; 3. Python 인라인 스크립트를 통한 텍스트 추출
+  		(t
+  		 (let* ((py-script "
+  import sys
+  try:
+      from pypdf import PdfReader
+      reader = PdfReader(sys.argv[1])
+      text = '\\n'.join([page.extract_text() for page in reader.pages if page.extract_text()])
+      print(text)
+  except ImportError:
+      print('Error: pypdf 라이브러리가 설치되지 않았습니다. 터미널에서 pip3 install pypdf 를 실행하세요.')
+  except Exception as e:
+      print(f'Error: PDF를 읽는 중 오류가 발생했습니다 ({str(e)})')
+  ")
+  			;; 쉘 명령어 실행 (파이썬 스크립트에 filepath 전달)
+  			(command (format "python3 -c %s %s" 
+  					 (shell-quote-argument py-script) 
+  					 (shell-quote-argument filepath)))
+  			(text (shell-command-to-string command)))
+                     
+                     (if (string-empty-p (string-trim text))
+                         "Error: 문서에서 텍스트를 추출할 수 없습니다. (스캔된 이미지이거나 암호가 걸려있을 수 있습니다.)"
+                       text))))))
+
+    )
+#+end_src
