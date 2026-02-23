@@ -63,6 +63,7 @@
   - [[#gptel-directives][GPTEL directives]]
   - [[#gptel-로-common-lisp-refactoring-직접-요청][GPTEL 로 Common lisp Refactoring 직접 요청]]
   - [[#gptel-tool][GPTEL tool]]
+  - [[#gptel-agent][GPTEL-AGENT]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -1161,4 +1162,13 @@ Lua 의 경우 버전 낮춘다.
                        text))))))
 
     )
+#+end_src
+
+** GPTEL-AGENT
+
+#+begin_src emacs-lisp
+
+  (use-package gptel-agent
+    :ensure (:host github :repo "karthink/gptel-agent")
+    :config (gptel-agent-update))
 #+end_src
