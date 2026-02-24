@@ -1017,7 +1017,7 @@ Lua 의 경우 버전 낮춘다.
     :ensure (:host github :repo "jwiegley/gptel-prompts")
     :after gptel
     :config
-    (setq gptel-prompts-directory (expand-file-name "~/project/ai/composable-prompts"))
+    (setq gptel-prompts-directory (expand-file-name "~/project/ai/composable-directives"))
     (gptel-prompts-update)
     ;; ensure prompts are updated if prompt files change
     (gptel-prompts-add-update-watchers))          
@@ -1029,7 +1029,7 @@ Lua 의 경우 버전 낮춘다.
     "composable-prompts 디렉토리에서 여러 파일을 선택해 하나의 시스템 프롬프트로 병합합니다.
   여러 개를 선택할 때는 콤마(,)로 구분하세요."
     (interactive)
-    (let* ((prompt-dir (expand-file-name "~/project/ai/composable-prompts"))
+    (let* ((prompt-dir (expand-file-name "~/project/ai/composable-directives"))
            ;; 디렉토리 내의 모든 .md 및 .txt 파일 검색
            (files (directory-files-recursively prompt-dir "\\.md\\'\\|\\.txt\\'"))
            ;; 파일 경로를 디렉토리 기준 상대 경로로 변환 (보기 좋게)
