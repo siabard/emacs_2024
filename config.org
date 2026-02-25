@@ -523,18 +523,19 @@
   (use-package cond-let
     :ensure t)
 
+  (use-package transient
+    :ensure t)
+
   (use-package magit
   :ensure t
-  :after cond-let
+  :after (cond-let transient)
   :commands (magit-status)
   :bind (("C-x g" . magit-status))
   :config
   (setf (alist-get 'unpushed magit-section-initial-visibility-alist) 'show))
 
 
-  (use-package transient
-    :ensure t
-    :after magit)
+
 #+END_SRC
 
 #+RESULTS:
@@ -683,21 +684,42 @@
     :ensure t
     :after eglot
     :init
+    ;; tree-sitter 지원 활성화
     (setq rust-mode-treesitter-derive t)
-    (setq rust-rustfmt-bin (expand-file-name "~/.cargo/bin/rustfmt")
-          rust-cargo-bin (expand-file-name "~/.cargo/bin/cargo"))
-    (add-to-list 'eglot-server-programs `((rust-mode rust-ts-mode) . (,(expand-file-name "~/.local/bin/rust-analyzer"))))
-    (setq rust-format-on-save t)
-    (add-hook 'rust-mode-hook
-              (lambda () (prettify-symbols-mode)))
-    (add-hook 'rust-mode-hook
-              (lambda () (setq indent-tabs-mode nil
-                               tab-width 4
-                               c-basic-offset 4
-                               fill-column 120)))
-    :hook 
-    (((rust-mode rust-ts-mode) . corfu-mode)
-     ((rust-mode rust-ts-mode) . eglot-ensure)))
+    ;; Emacs 29 이상일 경우 기본적으로 rust-ts-mode를 사용하도록 리매핑
+    (when (boundp 'major-mode-remap-alist)
+      (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
+    
+    :custom
+    (rust-format-on-save t)
+    ;; PATH 환경 변수가 에디터에 잘 잡혀있다면 이 절대경로들은 생략할 수도 있습니다.
+    (rust-rustfmt-bin (expand-file-name "~/.cargo/bin/rustfmt"))
+    (rust-cargo-bin (expand-file-name "~/.cargo/bin/cargo"))
+
+    ;; AI 도구 및 기타 유용한 단축키 바인딩
+    :bind (:map rust-mode-map
+                ("C-c C-c" . rust-run)
+                ("C-c g"   . gptel-menu)  ;; AI에게 현재 맥락을 기반으로 질문/리팩토링 요청
+                ("C-c s"   . gptel-send)) ;; 선택한 영역의 코드를 바로 AI로 전송하여 인라인 응답 받기
+    
+
+    :hook
+    ((rust-mode rust-ts-mode) . eglot-ensure)
+    ((rust-mode rust-ts-mode) . corfu-mode)
+    ((rust-mode rust-ts-mode) . prettify-symbols-mode)
+    ((rust-mode rust-ts-mode) . (lambda ()
+  				;; 전역 오염을 막기 위해 반드시 setq-local 사용
+  				(setq-local indent-tabs-mode nil
+                                              tab-width 4
+                                              c-basic-offset 4
+                                              fill-column 120)))
+
+    :config
+    ;; eglot이 로드된 이후에 서버 프로그램을 등록합니다.
+    (with-eval-after-load 'eglot
+      (add-to-list 'eglot-server-programs
+  		 `((rust-mode rust-ts-mode) . (,(expand-file-name "~/.local/bin/rust-analyzer")))))
+    )
 
 #+END_SRC
 
@@ -1003,7 +1025,7 @@ Lua 의 경우 버전 낮춘다.
                ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
   	     ("mcp-shell-server" . (:command "uvx"
   					     :args ("mcp-shell-server")
-  					     :env (:ALLOW_COMMANDS "bc,cat,chmod,curl,date,echo,emacs,find,git,grep,gunzip,head,jq,kubectl,ls,lynx,npm,psql,pwd,python,rg,sed,sqlite3,tail,unzip,wc")))))
+  					     :env (:ALLOW_COMMANDS "bc,cat,chmod,curl,date,echo,emacs,find,git,grep,gunzip,head,jq,kubectl,ls,lynx,npm,psql,pwd,python,rg,sed,sqlite3,tail,unzip,wc,sbcl")))))
     :config (require 'mcp-hub)
     :hook (after-init . mcp-hub-start-all-server))
 #+end_src
@@ -1170,5 +1192,10 @@ Lua 의 경우 버전 낮춘다.
 
   (use-package gptel-agent
     :ensure (:host github :repo "karthink/gptel-agent")
-    :config (gptel-agent-update))
+    :after gptel
+    :custom
+    (gptel-agent-dirs '("~/project/ai/gptel-agents/"))
+    :config
+    (unless (file-exist-p (car gptel-agent-dirs))
+      (make-directory (car gptel-agent-dirs) t)))
 #+end_src
