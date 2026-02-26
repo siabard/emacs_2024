@@ -1191,11 +1191,11 @@ Lua 의 경우 버전 낮춘다.
 #+begin_src emacs-lisp
 
   (use-package gptel-agent
-    :ensure (:host github :repo "karthink/gptel-agent")
+    :ensure (:host github :repo "karthink/gptel-agent" :files ("*.el" "agents"))
     :after gptel
     :custom
-    (gptel-agent-dirs '("~/project/ai/gptel-agents/"))
+    (add-to-list 'gptel-agent-dirs (expand-file-name "~/project/ai/gptel-agents/"))
     :config
-    (unless (file-exist-p (car gptel-agent-dirs))
-      (make-directory (car gptel-agent-dirs) t)))
+    (unless (file-exists-p "~/project/ai/gptel-agents/")
+      (make-directory "~/project/ai/gptel-agents/" t)))
 #+end_src
