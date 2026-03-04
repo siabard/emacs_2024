@@ -49,7 +49,6 @@
   - [[#rust--rust-mode][Rust  (RUST mode)]]
   - [[#pascal-fpc][PASCAL (FPC)]]
   - [[#typescript][Typescript]]
-  - [[#clojure-mode][Clojure Mode]]
   - [[#cider][Cider]]
 - [[#기타][기타]]
   - [[#backup-및-임시파일-경로-수정][Backup 및 임시파일 경로 수정]]
@@ -676,15 +675,6 @@
 #+begin_src emacs-lisp
   (use-package clojure-mode 
     :ensure t)
-
-  (use-package cider 
-    :ensure t
-    :config
-    (setq cider-auto-select-error-buffer nil)
-    (setq cider-repl-pop-to-buffer-on-connect t)
-    )
-
-
 #+end_src
 
 ** C++
@@ -785,16 +775,6 @@
   	(css-mode . css-ts-mode)
   	(json-mode . json-ts-mode)))
 #+end_src
-
-
-
-** Clojure Mode
-
-#+begin_src emacs-lisp
-  (use-package clojure-mode
-    :ensure t)
-#+end_src
-
 
 
 
@@ -1031,7 +1011,6 @@ Lua 의 경우 버전 낮춘다.
       
       (setq gptel-model 'qwen2.5-coder-7b
     	gptel-backend gptel--local-backend)
-
 
 
       ;; 5. org 파일을 파싱하여 지시문(Directives)로 변환하는 함수 
