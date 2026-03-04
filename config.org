@@ -42,6 +42,7 @@
   - [[#eglot][Eglot]]
 - [[#프로그래밍-언어][프로그래밍 언어]]
   - [[#common-lisp][Common Lisp]]
+  - [[#clojure][Clojure]]
   - [[#c][C++]]
   - [[#d-lang][D-lang]]
   - [[#rust--rust-mode][Rust  (RUST mode)]]
@@ -656,6 +657,23 @@
 #+END_SRC
 
 
+
+
+** Clojure
+#+begin_src emacs-lisp
+  (use-package clojure-mode 
+    :ensure t)
+
+  (use-package cider 
+    :ensure t
+    :config
+    (setq cider-auto-select-error-buffer nil)
+    (setq cider-repl-pop-to-buffer-on-connect t)
+    )
+
+
+#+end_src
+
 ** C++
 
 #+BEGIN_SRC emacs-lisp
@@ -704,6 +722,7 @@
     
 
     :hook
+    ((clojure-mode clojurescript-mode) . eglot-ensure)
     ((rust-mode rust-ts-mode) . eglot-ensure)
     ((rust-mode rust-ts-mode) . corfu-mode)
     ((rust-mode rust-ts-mode) . prettify-symbols-mode)
