@@ -1007,10 +1007,13 @@ Lua 의 경우 버전 낮춘다.
       (defvar gptel--local-backend
         (gptel-make-openai "Local-Llama"
           :host "localhost:48080"
+  	:protocol "http"
           :stream t
-          :models '(qwen2.5-coder-7b)))
+  	:endpoint "/v1/chat/completions"
+  	:key "openaillama"
+          :models '(qwen2.5-coder)))
       
-      (setq gptel-model 'qwen2.5-coder-7b
+      (setq gptel-model 'qwen2.5-coder
     	gptel-backend gptel--local-backend)
 
 
