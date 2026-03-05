@@ -67,6 +67,7 @@
   - [[#gptel-로-common-lisp-refactoring-직접-요청][GPTEL 로 Common lisp Refactoring 직접 요청]]
   - [[#gptel-tool][GPTEL tool]]
   - [[#gptel-agent][GPTEL-AGENT]]
+  - [[#sdd][SDD]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -1252,4 +1253,59 @@ Lua 의 경우 버전 낮춘다.
     :config
     (unless (file-exists-p "~/project/ai/gptel-agents/")
       (make-directory "~/project/ai/gptel-agents/" t)))
+#+end_src
+
+** SDD
+
+#+begin_src emacs-lisp
+  (defun sdd--create-file-with-template (dir filename content)
+    "주어진 디렉토리(DIR)에 파일(FILENAME)을 생성하고 내용(CONTENT)을 삽입합니다."
+    (let ((filepath (expand-file-name filename dir)))
+      (with-temp-file filepath
+        (insert content))))
+
+  (defun sdd-new-iteration (base-dir iter-name)
+    "Spec Driven Development를 위한 새로운 이터레이션 디렉토리와 Org 파일들을 생성합니다."
+    ;; 사용자가 디렉토리와 이터레이션 이름을 순서대로 입력하도록 변경
+    (interactive
+     (list (read-directory-name "Project Directory: " default-directory)
+           (read-string "Iteration Name (예: 001-multi-objects): ")))
+    
+    (let* ((dir-name (format "iter-%s" iter-name))
+           ;; 선택한 base-dir 하위에 새로운 이터레이션 디렉토리 경로 지정
+           (dir-path (expand-file-name dir-name base-dir)))
+      
+      (if (file-exists-p dir-path)
+          (message "디렉토리 %s 가 이미 존재합니다!" dir-path)
+        (progn
+          (make-directory dir-path t)
+          
+          ;; 1. context.org
+          (sdd--create-file-with-template
+           dir-path "context.org"
+           "* Current State\n\n* Objective\n\n* Technical Context\n\n* Prompt Template :noexport:\n#+BEGIN_QUOTE\n너는 ClojureScript와 Pixi.js를 전문으로 다루는 시니어 웹 게임 아키텍트야.\n아래 현재까지 구현된 코드베이스 상태와 이번 이터레이션 목표를 바탕으로,\n다음 단계에서 로컬 LLM이 완벽하게 이해하고 코딩할 수 있도록 context.org 파일에 들어갈 내용을 작성해줘.\n\n작성 규칙:\n1. Emacs Org-mode 포맷을 엄격히 준수할 것.\n2. ClojureScript의 함수형 패러다임(atom)과 Pixi.js의 객체지향적 렌더링을 어떻게 연결할지 명확한 가이드를 포함할 것.\n\n[현재 상태 및 코드 요약]\n\n[이번 이터레이션 목표]\n#+END_QUOTE\n")
+          
+          ;; 2. todo.org
+          (sdd--create-file-with-template
+           dir-path "todo.org"
+           "* Tasks\n\n* Test Cases\n\n* Prompt Template :noexport:\n#+BEGIN_QUOTE\n앞서 작성된 context.org의 내용을 바탕으로 실제 개발을 진행할 todo.org 문서를 작성해줘. \n이 문서는 파라미터 수가 적은 로컬 LLM이 읽고 하나씩 구현할 것이므로, 지시사항이 매우 구체적이고 원자적(Atomic)이어야 해.\n\n작성 규칙:\n1. Org-mode의 체크박스(- [ ]) 형태를 사용할 것.\n2. 파일명별로 작업을 나누고, 함수 입출력 형태를 명시할 것.\n3. Test Cases 섹션을 만들고, Cider REPL에서 평가해 볼 수 있는 코드를 적어줄 것.\n\n[context.org 내용]\n#+END_QUOTE\n")
+          
+          ;; 3. worklist.org
+          (sdd--create-file-with-template
+           dir-path "worklist.org"
+           "* Work Completed\n\n* Prompt Template :noexport:\n#+BEGIN_QUOTE\n너는 ClojureScript 코더야. 불필요한 인사말이나 장황한 설명은 생략하고, 오직 요구받은 코드와 작업 요약만 출력해.\n아래 todo.org의 작업 중 [수행할 작업 번호]를 구현해줘.\n\n작성 규칙:\n1. 기존 코드를 수정하는 경우, 전체를 다시 쓰지 말고 수정되는 함수만 제공할 것.\n2. 코드 작성이 끝나면, 네가 어떤 작업을 수행했는지 짧게 요약해 줄 것.\n\n[현재 파일 코드]\n\n[수행할 작업]\n#+END_QUOTE\n")
+          
+          ;; 4. tests.org
+          (sdd--create-file-with-template
+           dir-path "tests.org"
+           "* Test Results\n\n* Prompt Template :noexport:\n#+BEGIN_QUOTE\n코드를 작성하고 Cider REPL에서 테스트를 하던 중 아래와 같은 에러(또는 원치 않는 결과)가 발생했어.\n원인을 분석하고 해결하기 위한 ClojureScript 수정 코드를 제안해줘.\n\n작성 규칙:\n해결책을 제시한 후, 이 이슈를 tests.org에 기록할 수 있도록 문제 원인과 해결 방법을 짧은 요약으로 제공해.\n\n[발생한 문제 / 에러 스택 트레이스]\n\n[문제가 발생한 코드 부분]\n#+END_QUOTE\n")
+          
+          ;; 5. validation.org
+          (sdd--create-file-with-template
+           dir-path "validation.org"
+           "* Validation Summary\n\n* Next Steps\n\n* Prompt Template :noexport:\n#+BEGIN_QUOTE\n이번 이터레이션의 목표에 대한 작업과 테스트가 모두 끝났어.\n아래의 worklist.org와 tests.org 내용을 분석해서, 이번 이터레이션을 마무리하는 validation.org 문서를 작성해줘.\n\n작성 규칙:\n1. 이번 이터레이션에서 달성된 기술적 포인트들을 요약할 것.\n2. 남아있는 기술적 부채나 개선 포인트가 있다면 짚어줄 것.\n3. 다음 이터레이션의 목표와 예상 작업 아이디어를 제안할 것.\n\n[worklist.org 내용]\n\n[tests.org 내용]\n#+END_QUOTE\n")
+          
+          ;; 작업 완료 후 context.org 파일을 엽니다.
+          (find-file (expand-file-name "context.org" dir-path))
+          (message "성공적으로 %s 에 이터레이션을 생성했습니다." dir-path)))))
 #+end_src
