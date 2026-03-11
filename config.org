@@ -68,44 +68,46 @@
   - [[#gptel-tool][GPTEL tool]]
   - [[#gptel-agent][GPTEL-AGENT]]
   - [[#sdd][SDD]]
+  - [[#저사양기기][저사양기기]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
 ** Elpaca Package Manager
 
 #+BEGIN_SRC emacs-lisp
+  ;; -*- lexical-binding: t; -*-
   (defvar elpaca-installer-version 0.11)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
   (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
   (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-				:ref nil :depth 1 :inherit ignore
-				:files (:defaults "elpaca-test.el" (:exclude "extensions"))
-				:build (:not elpaca--activate-package)))
+  			      :ref nil :depth 1 :inherit ignore
+  			      :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+  			      :build (:not elpaca--activate-package)))
   (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-	 (build (expand-file-name "elpaca/" elpaca-builds-directory))
-	 (order (cdr elpaca-order))
-	 (default-directory repo))
+         (build (expand-file-name "elpaca/" elpaca-builds-directory))
+         (order (cdr elpaca-order))
+         (default-directory repo))
     (add-to-list 'load-path (if (file-exists-p build) build repo))
     (unless (file-exists-p repo)
       (make-directory repo t)
       (when (<= emacs-major-version 28) (require 'subr-x))
       (condition-case-unless-debug err
-	  (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-		    ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-						    ,@(when-let* ((depth (plist-get order :depth)))
-							(list (format "--depth=%d" depth) "--no-single-branch"))
-						    ,(plist-get order :repo) ,repo))))
-		    ((zerop (call-process "git" nil buffer t "checkout"
-					  (or (plist-get order :ref) "--"))))
-		    (emacs (concat invocation-directory invocation-name))
-		    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-					  "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-		    ((require 'elpaca))
-		    ((elpaca-generate-autoloads "elpaca" repo)))
-	      (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-	    (error "%s" (with-current-buffer buffer (buffer-string))))
-	((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  	(if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+  		  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+  						  ,@(when-let* ((depth (plist-get order :depth)))
+  						      (list (format "--depth=%d" depth) "--no-single-branch"))
+  						  ,(plist-get order :repo) ,repo))))
+  		  ((zerop (call-process "git" nil buffer t "checkout"
+  					(or (plist-get order :ref) "--"))))
+  		  (emacs (concat invocation-directory invocation-name))
+  		  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+  					"--eval" "(byte-recompile-directory \".\" 0 'force)")))
+  		  ((require 'elpaca))
+  		  ((elpaca-generate-autoloads "elpaca" repo)))
+  	    (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+  	  (error "%s" (with-current-buffer buffer (buffer-string))))
+        ((error) (warn "%s" err) (delete-directory repo 'recursive))))
     (unless (require 'elpaca-autoloads nil t)
       (require 'elpaca)
       (elpaca-generate-autoloads "elpaca" repo)
@@ -118,13 +120,13 @@
 ** Eldoc
 
 #+BEGIN_SRC emacs-lisp
-;  (unload-feature 'eldoc t)
-;  (setq custom-delayed-init-variables '())
-;  (defvar global-eldoc-mode nil)
-;  (elpaca eldoc
-;    (require 'eldoc)
-;    (global-eldoc-mode)
-;    (provide 'eldoc))
+  					;  (unload-feature 'eldoc t)
+  					;  (setq custom-delayed-init-variables '())
+  					;  (defvar global-eldoc-mode nil)
+  					;  (elpaca eldoc
+  					;    (require 'eldoc)
+  					;    (global-eldoc-mode)
+  					;    (provide 'eldoc))
 #+END_SRC
 
 
@@ -204,7 +206,7 @@
   (use-package all-the-icons-dired
     :ensure t
     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
-  
+
 #+END_SRC
 
 * FONTS
@@ -217,7 +219,7 @@
   (prefer-coding-system 'utf-8)
 
   (when (or (eq system-type 'gnu/linux)
-	    (eq system-type 'darwin))
+  	  (eq system-type 'darwin))
     ;; defult Latin font :face
     (set-face-attribute 'default nil :family "Hack")
     (set-face-attribute 'default nil :height 120)
@@ -225,8 +227,8 @@
 
   ;; 한글과 영문의 폰트 스케일 맞추기 - orgmode 테이블 깨지지않게하기
   (setq face-font-rescale-alist 
-	'((".*hiragino.*" . 1.2)
-	  ("D2Coding" . 1.2307692307692308)))
+        '((".*hiragino.*" . 1.2)
+  	("D2Coding" . 1.2307692307692308)))
 
 
 #+END_SRC
@@ -240,7 +242,7 @@
   (global-set-key (kbd "C--") 'text-scale-decrease)
   (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
   (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
-  
+
 #+END_SRC
 
 * Color Scheme
@@ -265,7 +267,7 @@
   (menu-bar-mode -1)
   (tool-bar-mode -1)
   (scroll-bar-mode -1)
-  
+
 #+END_SRC
 
 ** Display Line numbers and Truncated Lines
@@ -283,25 +285,25 @@
 #+BEGIN_SRC emacs-lisp
 
   (use-package dashboard
-  :ensure t 
-  :init
-  (setq initial-buffer-choice 'dashboard-open)
-  (setq dashboard-set-heading-icons t)
-  (setq dashboard-set-file-icons t)
-  (setq dashboard-banner-logo-title "Emacs Is More Than A Text Editor!")
-  ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  ;;(setq dashboard-startup-banner ;; "~/.config/emacs/images/dtmacs-logo.png")  ;; use custom image as banner
-  (setq dashboard-center-content nil) ;; set to 't' for centered content
-  (setq dashboard-items '((recents . 5)
-                          (agenda . 5 )
-                          (bookmarks . 3)
-                          (projects . 3)
-                          (registers . 3)))
-  :custom 
-  (dashboard-modify-heading-icons '((recents . "file-text")
+    :ensure t 
+    :init
+    (setq initial-buffer-choice 'dashboard-open)
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
+    (setq dashboard-banner-logo-title "Emacs Is More Than A Text Editor!")
+    ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+    ;;(setq dashboard-startup-banner ;; "~/.config/emacs/images/dtmacs-logo.png")  ;; use custom image as banner
+    (setq dashboard-center-content nil) ;; set to 't' for centered content
+    (setq dashboard-items '((recents . 5)
+                            (agenda . 5 )
+                            (bookmarks . 3)
+                            (projects . 3)
+                            (registers . 3)))
+    :custom 
+    (dashboard-modify-heading-icons '((recents . "file-text")
                                       (bookmarks . "book")))
-  :config
-  (dashboard-setup-startup-hook))
+    :config
+    (dashboard-setup-startup-hook))
 
 
 #+END_SRC
@@ -392,20 +394,20 @@
   (use-package which-key
     :ensure t
     :init
-      (which-key-mode 1)
+    (which-key-mode 1)
     :config
     (setq which-key-side-window-location 'bottom
-	    which-key-sort-order #'which-key-key-order-alpha
-	    which-key-sort-uppercase-first nil
-	    which-key-add-column-padding 1
-	    which-key-max-display-columns nil
-	    which-key-min-display-lines 6
-	    which-key-side-window-slot -10
-	    which-key-side-window-max-height 0.25
-	    which-key-idle-delay 0.8
-	    which-key-max-description-length 25
-	    which-key-allow-imprecise-window-fit t
-	    which-key-separator " → " ))
+  	which-key-sort-order #'which-key-key-order-alpha
+  	which-key-sort-uppercase-first nil
+  	which-key-add-column-padding 1
+  	which-key-max-display-columns nil
+  	which-key-min-display-lines 6
+  	which-key-side-window-slot -10
+  	which-key-side-window-max-height 0.25
+  	which-key-idle-delay 0.8
+  	which-key-max-description-length 25
+  	which-key-allow-imprecise-window-fit t
+  	which-key-separator " → " ))
 
 #+END_SRC
 
@@ -446,7 +448,7 @@
     :after (flycheck eglot)
     :config
     (global-flycheck-eglot-mode 1))
-    
+
 #+END_SRC
 
 ** Corfu
@@ -465,12 +467,12 @@
     (corfu-quit-no-match 'separator) ;; 매칭되는 게 없으면 팝업 끄기
     (corfu-preselect 'prompt)      ;; 첫 번째 항목을 바로 선택하지 않음 (엔터 실수 방지)
     :bind
-        (:map corfu-map
-              ("SPC" . corfu-insert-separator) ;; 공백 입력 시 필터링 구분자로 사용
-              ("TAB" . corfu-next)
-              ([tab] . corfu-next)
-              ("S-TAB" . corfu-previous)
-              ([backtab] . corfu-previous)))
+    (:map corfu-map
+          ("SPC" . corfu-insert-separator) ;; 공백 입력 시 필터링 구분자로 사용
+          ("TAB" . corfu-next)
+          ([tab] . corfu-next)
+          ("S-TAB" . corfu-previous)
+          ([backtab] . corfu-previous)))
 
   (use-package nerd-icons-corfu
     :ensure t
@@ -491,19 +493,19 @@
 
 #+BEGIN_SRC emacs-lisp
   (use-package counsel
-        :ensure t
-        :after ivy
-        :config (counsel-mode))
+    :ensure t
+    :after ivy
+    :config (counsel-mode))
 
   (use-package ivy
-        :ensure t
-        :diminish
-        :bind
-        ;; ivy-resume resumes the last Ivy-based completion.
-        (("C-c C-r" . ivy-resume)
-         ("C-x B" . ivy-switch-buffer-other-window))
-        :config
-        (ivy-mode))
+    :ensure t
+    :diminish
+    :bind
+    ;; ivy-resume resumes the last Ivy-based completion.
+    (("C-c C-r" . ivy-resume)
+     ("C-x B" . ivy-switch-buffer-other-window))
+    :config
+    (ivy-mode))
 
   (use-package all-the-icons-ivy-rich
     :ensure t
@@ -515,8 +517,8 @@
     :init (ivy-rich-mode 1)
     :custom 
     (ivy-virtual-abbreviate 'full
-     ivy-rich-switch-buffer-align-virtual-buffer t
-     ivy-rich-path-style 'abbrev))
+  			  ivy-rich-switch-buffer-align-virtual-buffer t
+  			  ivy-rich-path-style 'abbrev))
 #+END_SRC
 
 ** Git (Magit)
@@ -531,12 +533,12 @@
     :ensure t)
 
   (use-package magit
-  :ensure t
-  :after (cond-let transient)
-  :commands (magit-status)
-  :bind (("C-x g" . magit-status))
-  :config
-  (setf (alist-get 'unpushed magit-section-initial-visibility-alist) 'show))
+    :ensure t
+    :after (cond-let transient)
+    :commands (magit-status)
+    :bind (("C-x g" . magit-status))
+    :config
+    (setf (alist-get 'unpushed magit-section-initial-visibility-alist) 'show))
 
 
 
@@ -560,11 +562,11 @@
 
   ;; markdown -> org 기능
   (defun markdown-convert-buffer-to-org ()
-      "Convert the current buffer's content from markdown to orgmode format and save it with the current buffer's file name but with .org extension."
-      (interactive)
-      (shell-command-on-region (point-min) (point-max)
-                               (format "pandoc -f markdown -t org -o %s"
-                                       (concat (file-name-sans-extension (buffer-file-name)) ".org"))))
+    "Convert the current buffer's content from markdown to orgmode format and save it with the current buffer's file name but with .org extension."
+    (interactive)
+    (shell-command-on-region (point-min) (point-max)
+                             (format "pandoc -f markdown -t org -o %s"
+                                     (concat (file-name-sans-extension (buffer-file-name)) ".org"))))
 #+END_SRC
 
 
@@ -586,7 +588,7 @@
 #+BEGIN_SRC emacs-lisp
 
   (use-package eglot
-      ;;:ensure (:inherit elpaca-menu-gnu-devel-elpa)
+    ;;:ensure (:inherit elpaca-menu-gnu-devel-elpa)
     :ensure nil
     :demand t
     :after (jsonrpc)
@@ -635,7 +637,7 @@
   (use-package slime 
     :ensure t
     :init
-    (load (expand-file-name "~/quicklisp/slime-helper.el")))
+    (load (expand-file-name "~/quicklisp/slime-helper.el") t))
 
   ;; (use-package slime-autoloads :ensure t)
 
@@ -683,9 +685,9 @@
 #+BEGIN_SRC emacs-lisp
 
   (use-package ccls
-      :ensure t 
-      :config
-      (setq ccls-executable "~/.local/bin/ccls"))
+    :ensure t 
+    :config
+    (setq ccls-executable "~/.local/bin/ccls"))
 
 #+END_SRC
 
@@ -771,10 +773,12 @@
 
 #+begin_src emacs-lisp
   (setq major-mode-remap-alist
-        '((typescript-mode . typescript-ts-mode)
-  	(js-mode . js-ts-mode)
-  	(css-mode . css-ts-mode)
-  	(json-mode . json-ts-mode)))
+        (append 
+         '((typescript-mode . typescript-ts-mode)
+  	 (js-mode . js-ts-mode)
+  	 (css-mode . css-ts-mode)
+  	 (json-mode . json-ts-mode))
+         major-mode-remap-alist))
 #+end_src
 
 
@@ -807,8 +811,8 @@
     "Return a new file path of a given file path.
   If the new path's directories does not exist, create them."
     (let* ((backupRootDir "~/.emacs.d/emacs-backup/")
-	   (filePath (replace-regexp-in-string "[A-Za-z]:" "" fpath )) ; remove Windows driver letter in path
-	   (backupFilePath (replace-regexp-in-string "//" "/" (concat backupRootDir filePath "~") )))
+  	 (filePath (replace-regexp-in-string "[A-Za-z]:" "" fpath )) ; remove Windows driver letter in path
+  	 (backupFilePath (replace-regexp-in-string "//" "/" (concat backupRootDir filePath "~") )))
       (make-directory (file-name-directory backupFilePath) (file-name-directory backupFilePath))
       backupFilePath))
   (setq make-backup-file-name-function 'yhj/backup-file-name)
@@ -870,14 +874,8 @@
     :mode ("\\.odin\\'" . odin-mode)
     :hook (odin-mode . eglot-ensure)
     :config
-    (add-to-list 'eglot-server-programs '((odin-mode  odin-ts-mode) . ("ols"))))
-
-
-
-  ;; Add OLS to the list of available programs
-  ;; NOTE: As of Emacs 30, this is not needed.
-  (with-eval-after-load 'eglot
-    (add-to-list 'eglot-server-programs '((odin-mode odin-ts-mode) . ("ols"))))
+    (with-eval-after-load 'eglot 
+      (add-to-list 'eglot-server-programs '((odin-mode  odin-ts-mode) . ("ols")))))
 
 #+end_src
 
@@ -890,10 +888,10 @@
     (require 'llm-ollama)
     (setopt ellama-language "English")
     (setopt ellama-provider
-  		  (make-llm-ollama
-  		   :chat-model "codellama:7b" 
-  		   :embedding-model "nomic-embed-text"
-  		   :default-chat-non-standard-params '(("num_ctx" . 8192))))
+  	  (make-llm-ollama
+  	   :chat-model "codellama:7b" 
+  	   :embedding-model "nomic-embed-text"
+  	   :default-chat-non-standard-params '(("num_ctx" . 8192))))
     (setopt ellama-coding-provider
   	  (make-llm-ollama
   	   :chat-model "qwen2.5-coder:7b"
@@ -906,6 +904,7 @@
 
 Lua 의 경우 버전 낮춘다.
 #+begin_src emacs-lisp
+  (defvar treesit-language-source-alist nil)
   (let ((new-langs
          '((lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
   	 (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
@@ -941,7 +940,6 @@ Lua 의 경우 버전 낮춘다.
 
 #+end_src
 
-
 * 바이브 코딩  
 
 ** Aider
@@ -962,103 +960,103 @@ Lua 의 경우 버전 낮춘다.
 ** gptel
 
 #+begin_src emacs-lisp
-    (use-package gptel
-      :ensure t
-      :bind (("C-c RET" . gptel-send))
-      :config
-      (require 'org)
-      (require 'transient)
-      (require 'gptel-integrations)
-      (require 'gptel-org)
-      ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
-      (defvar my/gemini-api-key-cache nil
-        "API 키를 현재 Emacs 세션 동안만 저장하는 변수")
+  (use-package gptel
+    :ensure t
+    :bind (("C-c RET" . gptel-send))
+    :config
+    (require 'org)
+    (require 'transient)
+    (require 'gptel-integrations)
+    (require 'gptel-org)
+    ;; 1. API 키를 임시로 저장할 변수 선언 (초기값 nil)
+    (defvar my/gemini-api-key-cache nil
+      "API 키를 현재 Emacs 세션 동안만 저장하는 변수")
 
-      ;; 2. 키를 요청하는 함수 정의
-      (defun my/get-gemini-key ()
-        "변수에 키가 있으면 반환하고, 없으면 사용자에게 비밀번호처럼 물어본 뒤 저장합니다."
-        (or my/gemini-api-key-cache
-            ;; read-passwd는 입력 문자를 *로 가려줍니다.
-            (setq my/gemini-api-key-cache (read-passwd "API Key를 입력하세요: "))))
+    ;; 2. 키를 요청하는 함수 정의
+    (defun my/get-gemini-key ()
+      "변수에 키가 있으면 반환하고, 없으면 사용자에게 비밀번호처럼 물어본 뒤 저장합니다."
+      (or my/gemini-api-key-cache
+          ;; read-passwd는 입력 문자를 *로 가려줍니다.
+          (setq my/gemini-api-key-cache (read-passwd "API Key를 입력하세요: "))))
 
-      ;; 3. Gemini 설정에 '함수'를 전달
+    ;; 3. Gemini 설정에 '함수'를 전달
       ;;; (gptel-make-gemini "Gemini"
       ;;;   :key #'my/get-gemini-key  ;; 여기가 핵심입니다 (문자열 변수 대신 함수명 전달)
       ;;;   :stream t)
 
-      ;; 4. 기본 모델 설정
+    ;; 4. 기본 모델 설정
       ;;; (setq gptel-model 'gemini-2.5-flash) ;; 기본 gemini 사용함 
       ;;; (setq gptel-backend (gptel-make-gemini "Gemini" :key #'my/get-gemini-key :stream t))
 
-  ;; OpenRouter 백엔드
-      (defvar gptel--openrouter-backend
-        (gptel-make-openai "OpenRouter"
-          :host "openrouter.ai"
-          :endpoint "/api/v1/chat/completions"
-          :stream t
-          :key #'my/get-gemini-key
-          :models '(google/gemma-3-27b-it:free
-                    arcee-ai/trinity-large-preview:free
-                    deepseek/deepseek-r1-0528:free
-                    meta-llama/llama-3.3-70b-instruct:free
-                    openai/gpt-oss-120b:free)))
+    ;; OpenRouter 백엔드
+    (defvar gptel--openrouter-backend
+      (gptel-make-openai "OpenRouter"
+        :host "openrouter.ai"
+        :endpoint "/api/v1/chat/completions"
+        :stream t
+        :key #'my/get-gemini-key
+        :models '(google/gemma-3-27b-it:free
+                  arcee-ai/trinity-large-preview:free
+                  deepseek/deepseek-r1-0528:free
+                  meta-llama/llama-3.3-70b-instruct:free
+                  openai/gpt-oss-120b:free)))
 
-      ;; 로컬 Llama.cpp 백엔드
-      (defvar gptel--local-backend
-        (gptel-make-openai "Local-Llama"
-          :host "localhost:48080"
-  	:protocol "http"
-          :stream t
-  	:endpoint "/v1/chat/completions"
-  	:key "openaillama"
-          :models '(qwen2.5-coder)))
-      
-      (setq gptel-model 'qwen2.5-coder
+    ;; 로컬 Llama.cpp 백엔드
+    (defvar gptel--local-backend
+      (gptel-make-openai "Local-Llama"
+        :host "localhost:48080"
+        :protocol "http"
+        :stream t
+        :endpoint "/v1/chat/completions"
+        :key "openaillama"
+        :models '(qwen2.5-coder)))
+    
+    (setq gptel-model 'qwen2.5-coder
     	gptel-backend gptel--local-backend)
 
 
-      ;; 5. org 파일을 파싱하여 지시문(Directives)로 변환하는 함수 
-      (defun my/gptel-parse-org-directives (file)
-        "ORG 파일을 읽어 (KEY . CONTENT) 형태 리스트로 만들기"
-        (with-temp-buffer 
-          (insert-file-contents file)
-          (org-mode)
-          (let (directives)
-    	  (org-map-entries 
-    	   (lambda ()
-    	     (let* ((heading (org-get-heading t t t t))
-    		    (key (intern (replace-regexp-in-string " " "-" (downcase heading))))
-    		    (content (org-get-entry)))
-    	       (when (and heading content)
-    		 (push (cons key content) directives)))))
-    	  (nreverse directives))))
+    ;; 5. org 파일을 파싱하여 지시문(Directives)로 변환하는 함수 
+    (defun my/gptel-parse-org-directives (file)
+      "ORG 파일을 읽어 (KEY . CONTENT) 형태 리스트로 만들기"
+      (with-temp-buffer 
+        (insert-file-contents file)
+        (org-mode)
+        (let (directives)
+    	(org-map-entries 
+    	 (lambda ()
+    	   (let* ((heading (org-get-heading t t t t))
+    		  (key (intern (replace-regexp-in-string " " "-" (downcase heading))))
+    		  (content (org-get-entry)))
+    	     (when (and heading content)
+    	       (push (cons key content) directives)))))
+    	(nreverse directives))))
 
-      ;; 6. 메뉴에서 실행할 명령어 정의 
-      (defun my/gptel-load-directives-from-menu (file)
-        "메뉴에서 파일을 선택해 gptel-directives에 추가"
-        (interactive "fSelect Directives Org File: ") 
-        (let ((new-directives (my/gptel-parse-org-directives file)))
-          (if new-directives 
+    ;; 6. 메뉴에서 실행할 명령어 정의 
+    (defun my/gptel-load-directives-from-menu (file)
+      "메뉴에서 파일을 선택해 gptel-directives에 추가"
+      (interactive "fSelect Directives Org File: ") 
+      (let ((new-directives (my/gptel-parse-org-directives file)))
+        (if new-directives 
     	  (progn 
     	    (setq gptel-directives (append gptel-directives new-directives))
     	    (message "Loaded %d directives from %s" (length new-directives) file))
     	(message "No directives found in file."))))
 
-      ;; 7. gptel-menu 
-      (with-eval-after-load 'gptel-transient 
-        (transient-append-suffix 'gptel-menu 'gptel--infix-add-directive
-    	'("L" "Load Directives File" my/gptel-load-directives-from-menu))
-        )
-      (add-to-list 'gptel-prompt-prefix-alist `(org-mode . ,(concat "*** ian " (format-time-string "[%Y-%m-%d]") "\n")))
-      :custom
-      (gptel-default-mode 'org-mode)
-      (gptel-expert-commands t)
-      (gptel-track-media t)
-      (gptel-include-reasoning 'ignore)
-      (gptel-prompt-prefix-alist
-       '((markdown-mode . "### ") (org-mode . "*** ian\12") (text-mode . "### ")))
-      (gptel-log-level 'info)
+    ;; 7. gptel-menu 
+    (with-eval-after-load 'gptel-transient 
+      (transient-append-suffix 'gptel-menu 'gptel--infix-add-directive
+        '("L" "Load Directives File" my/gptel-load-directives-from-menu))
       )
+    (add-to-list 'gptel-prompt-prefix-alist `(org-mode . ,(concat "*** ian " (format-time-string "[%Y-%m-%d]") "\n")))
+    :custom
+    (gptel-default-mode 'org-mode)
+    (gptel-expert-commands t)
+    (gptel-track-media t)
+    (gptel-include-reasoning 'ignore)
+    (gptel-prompt-prefix-alist
+     '((markdown-mode . "### ") (org-mode . "*** ian\12") (text-mode . "### ")))
+    (gptel-log-level 'info)
+    )
 #+end_src
 
 
@@ -1151,17 +1149,17 @@ Lua 의 경우 버전 낮춘다.
                                 "Optimize this Common Lisp code and explain why.")))
       ;; gptel 버퍼를 열고 내용을 전송
       (gptel-request
-       defun-str
-       :system "You are a Common Lisp Expert."
-       :context (list (cons 'major-mode major-mode)) ;; 현재 모드 정보 전달
-       :callback (lambda (response info)
-                   (if response
-                       (with-current-buffer (get-buffer-create "*Gptel-Refactor*")
-                         (erase-buffer)
-                         (insert response)
-                         (common-lisp-mode) ;; 결과창도 리스프 모드로
-                         (display-buffer (current-buffer)))
-                     (message "Gptel request failed."))))))
+       (concat prompt "\n\n```lisp\n" defun-str "\n```")
+        :system "You are a Common Lisp Expert."
+        :context (list (cons 'major-mode major-mode)) ;; 현재 모드 정보 전달
+        :callback (lambda (response info)
+                    (if response
+                        (with-current-buffer (get-buffer-create "*Gptel-Refactor*")
+  			(erase-buffer)
+  			(insert response)
+  			(common-lisp-mode) ;; 결과창도 리스프 모드로
+  			(display-buffer (current-buffer)))
+                      (message "Gptel request failed."))))))
 
   ;; 키바인딩 (Lisp 모드에서만 동작)
   (with-eval-after-load 'slime
@@ -1173,72 +1171,267 @@ Lua 의 경우 버전 낮춘다.
 ** GPTEL tool
 
 #+begin_src emacs-lisp
-  (with-eval-after-load 'gptel
-    (gptel-make-tool
-     :name "read_pdf"
-     :description "주어진 경로의 PDF 파일에서 텍스트를 추출하여 읽어옵니다. PDF 문서의 내용을 파악하거나 요약해야 할 때 사용하세요."
-     :args (list '(:name "filepath" :type string :description "읽어올 PDF 파일의 절대 경로 (예: /Users/siabard/sandbox/document.pdf)"))
-     :category "file"
-     :function (lambda (filepath)
-                 (cond
-    		;; 1. 파일 존재 여부 확인
-    		((not (file-exists-p filepath))
-    		 (format "Error: 파일을 찾을 수 없습니다: %s" filepath))
-    		
-    		;; 2. CLI 도구 설치 여부 확인
-    		((not (executable-find "pdftotext"))
-    		 "Error: 시스템에 'pdftotext' 명령어가 없습니다. 터미널에서 'brew install poppler'를 실행해 주세요.")
-    		
-    		;; 3. 텍스트 추출 실행
-    		(t
-    		 ;; pdftotext <파일경로> - (표준 출력으로 텍스트 반환)
-    		 (let ((text (shell-command-to-string 
-                                (format "pdftotext %s -" (shell-quote-argument filepath)))))
-                     (if (string-empty-p (string-trim text))
-                         "Error: 문서에서 텍스트를 추출할 수 없습니다. (스캔된 이미지로만 구성된 PDF일 수 있습니다.)"
-                       text))))))
+  (defun my-agent-read-file (filepath)
+    "저장된 FILEPATH의 파일 내용을 읽어서 문자열로 반환한다. 
+    파일이 없거나 읽을 수 없는 경우 에러 메세지를 반환하여 에이전트가 상황을 인지하게 한다."
+    (let ((expanded-path (expand-file-name filepath)))
+      (if (file-readable-p expanded-path)
+    	(with-temp-buffer 
+    	  ;; 파일을 임시 버퍼에 삽입하고 그 내용을 문자열로 추출 
+    	  (insert-file-contents expanded-path)
+    	  (buffer-string))
+        ;; 에이전투가 실패 원인을 알도록 에러 반환 
+        (format "Error: Cannot read file or file is not exist. path: %s" expanded-path))))
+
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun my-agent-write-file (filepath content)
+    "FILEPATH에 CONTENT를 덮어씌운다. 상위 디렉토리가 없다면 자동으로 생성한다. 성공 또는 실패 메세지를 반환하여 에이전트가 결과를 인지하게 한다."
+
+    (condition-case err 
+        (let* ((expanded-path (expand-file-name filepath))
+  	     (dir-path (file-name-directory expanded-path)))
+  	;; 상위 경로가 존재하지않으면 생성 (t 옵션으로 부모 디렉토리까지 생성)
+  	(unless (file-exists-p dir-path)
+  	  (make-directory dir-path t))
+  	;; 임시 버퍼를 열어 내용을 삽입하고 파일로 저장 (기존 내영은 덮어씌움)
+  	(with-temp-file expanded-path
+  	  (insert content))
+
+  	;; 에이전트에게 전달할 성공 메세지 
+  	(format "Success: 파일 작성 완료. 경로: %s" expanded-path))
+      ;; 권한 문제 등으로 에러 발생시 에이전트에게 에러 내용 전달
+      (error (format "Error: 파일 작성 실패. 원인: %s" (error-message-string err)))))
+
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun my-agent-patch-file (filepath old-text new-text)
+    "FILEPATH의 파일에서 정확히 일치하는 OLD-TEXT를 찾아 NEW-TEXT로 교체한다.
+  일치하는 구간이 없거나 여러 개일 경우 에이전트에게 에러를 변환하여 수정을 유도한다"
+    (let ((expanded-path (expand-file-name filepath)))
+      (condition-case err
+  	(if (not (file-writable-p expanded-path))
+  	    (format "Error: 파일이 존재하지않거나 쓰기 권한이 없습니다. 경로: %s" expanded-path)
+  	  (with-temp-buffer
+  	    ;; 파일 내용을 임시 버퍼로 불러옴 
+  	    (insert-file-contents expanded-path)
+  	    (goto-char (point-min))
+
+  	    ;; old-text가 파일 내에 몇 번 등장하는지 카운트 
+  	    (let ((count 0))
+  	      (while (search-forward old-text nil t)
+  		(setq count (1+ count)))
+  	      
+  	      (cond 
+  	       ((= 0 count)
+  		;; 에이전트가 흔히 하는 실수(들여쓰기, 줄바꿈 불일치)를 가이드 
+  		"Error: old_text를 파일에서 찾을 수 없습니다. 공백, 줄바꿈, 들여쓰기가 원본 파일과 *정확히* 일치하는지 확인하세요.")
+  	       
+  	       ((> count 1)
+  		;; 중복 매칭 시 엉뚱한 곳을 수정하는 것을 방지
+  		(format "Error: old_text가 파일 내에 %d 번 존재하여 모호합니다. 주변 코드를 더 포함하여 old_text가 파일 내에서 유일해지도록 다시 시도하세요." count))
+  	       
+  	       (t
+  		;; 정확히 1번 매칭되었을 때만 교체 수행
+  		(goto-char (point-min))
+  		(search-forward old-text)
+  		(replace-match new-text t t)
+
+  		;; 변경된 내용을 실제 파일에 저장
+  		(write-region (point-min) (point-max) expanded-path)
+  		(format "Success: %s 파일의 코드가 성공적으로 수정되었습니다" expanded-path))))))
+
+        ;; 예기치 않은 Emacs Lisp 에러 처리 
+        (error (format "Error: 패치 실행 중 시스템 오류 발생: %s" (error-message-string err))))))
+#+end_src
 
 
-    (gptel-make-tool
-     :name "read_pypdf"
-     :description "주어진 경로의 PDF 파일에서 텍스트를 추출하여 읽어옵니다. PDF 문서의 내용을 파악하거나 요약해야 할 때 사용하세요."
-     :args '((:name "filepath" :type string :description "읽어올 PDF 파일의 절대 경로 (예: /Users/siabard/sandbox/document.pdf)"))
-     :category "file"
-     :function (lambda (filepath)
-                 (cond
-  		;; 1. 파일 존재 여부 확인
-  		((not (file-exists-p filepath))
-  		 (format "Error: 파일을 찾을 수 없습니다: %s" filepath))
-  		
-  		;; 2. 파이썬 명령어 확인
-  		((not (executable-find "python3"))
-  		 "Error: 시스템에 'python3' 명령어가 없습니다.")
-  		
-  		;; 3. Python 인라인 스크립트를 통한 텍스트 추출
-  		(t
-  		 (let* ((py-script "
-  import sys
-  try:
-      from pypdf import PdfReader
-      reader = PdfReader(sys.argv[1])
-      text = '\\n'.join([page.extract_text() for page in reader.pages if page.extract_text()])
-      print(text)
-  except ImportError:
-      print('Error: pypdf 라이브러리가 설치되지 않았습니다. 터미널에서 pip3 install pypdf 를 실행하세요.')
-  except Exception as e:
-      print(f'Error: PDF를 읽는 중 오류가 발생했습니다 ({str(e)})')
-  ")
-  			;; 쉘 명령어 실행 (파이썬 스크립트에 filepath 전달)
-  			(command (format "python3 -c %s %s" 
-  					 (shell-quote-argument py-script) 
-  					 (shell-quote-argument filepath)))
-  			(text (shell-command-to-string command)))
-                     
-                     (if (string-empty-p (string-trim text))
-                         "Error: 문서에서 텍스트를 추출할 수 없습니다. (스캔된 이미지이거나 암호가 걸려있을 수 있습니다.)"
-                       text))))))
-
+#+begin_src emacs-lisp 
+  ;; tool 이 comand shell 을 실행할 수 있는 복수 디렉토리 변수 
+  (defvar my-agent-allowed-shell-directories 
+    '("/Users/siabard/sandbox")
+    "에이전트가 명령어를 실행할 수 있는 허용된 샌드박스 디렉토리 목록. 필요에 따라 경로를 추가하시오. "
     )
+
+  (defvar my-agent-allowed-shell-commands 
+    '("bc" "cat" "chmod" "curl" "date" "echo" "emacs" "find" "git" "grep" "gunzip" "head" "jq" "kubectl" "ls" "lynx" "npm" "psql" "pwd" "python" "rg" "sed" "sqlite3" "tail" "unzip" "wc" "sbcl") 
+    "에이전트가 실행하도록 허용된 명령어 목록"
+    )
+
+  (defun my-agent-run-shell-safe (dir command-string)
+    "지정된 DIR이 유효한지 확인하고, COMMAND-STRING의 실행 파일이 존재하는지 검증한 후 실행한다. 쉘을 거치지 않고(call-process) 직접 실행하여 파이프(|) 나 리다이렉션(>) 을 통한 우회를 방지한다."
+
+    (let* ((expanded-dir (expand-file-name dir))
+           ;; "pytest -v test_main.py" 같은 문자열을 '("pytest" "-v" "test_main.py")로 분리 
+  	 (expanded-allowed-dirs (mapcar #'expand-file-name my-agent-allowed-shell-directories))
+           (args (split-string-and-unquote command-string))
+           (program (car args)) ;; 실행 파일 (예: pytest)
+           (program-args (cdr args)) ;; 인자 목록 (예: '("-v" "test_main.py"))
+           (exit-code 0)
+           (output-string "")
+           (max-output-length 4000)
+  	 (is-in-allowed-dir nil))
+
+
+      (dolist (base-dir expanded-allowed-dirs)
+        (when (file-in-directory-p expanded-dir base-dir)
+  	(setq is-in-allowed-dir t)))
+
+      (condition-case err
+          (cond 
+  	 ;; 제약1. 복수 Filesystem 샌드박스 검증 
+  	 ((not is-in-allowed-dir)
+  	  (format "Error: 보안 정책 위반. 허용된 샌드박스 디렉토리 외부에서는 명령어를 실행할 수 없습니다.\n요청된 경로: %s\n허용된 샌드박스: %s" 
+  		  expanded-dir
+  		  (string-join expanded-allowed-dirs ", ")))
+
+  	 ;; 제약2. Shell 명령어 allowed 리스트 
+  	 ((not (member program my-agent-allowed-shell-commands))
+  	  (format "Error: 보안 정책 위반. 허용되지 않은 명령어 '%s' 입니다. 허용된 명령어: %s"
+  		  program
+  		  (string-join my-agent-allowed-shell-commands ", ")))
+
+           ;; 검증 1: 디렉토리 실제 존재 확인 
+           ((not (file-directory-p expanded-dir))
+    	  (format "Error: 지정된 디렉토리가 존재하지 않습니다: %s" expanded-dir))
+
+  	 ;; 검증 2: 첫번째 단어(program)가 시스템 경로에 있는 실행 가능한 파일인지 확인
+  	 ((not (executable-find program))
+  	  (format "Error: '%s' 명령어를 찾을 수 없거나 실행 권한이 없습니다. 쉘 내장 명령어(cd, echo 등)나 파이프(|)는 사용할 수 없습니다." program))
+
+  	 ;; 검증 통과
+  	 (t
+  	  (let ((default-directory expanded-dir))
+  	    (with-temp-buffer
+  	      ;; call-process는 쉘을 호출하지않고 OS레벨에서 직접 바이너리를 호출 
+  	      (setq exit-code (apply #'call-process program nil t nil program-args))
+  	      (setq output-string (buffer-string))
+
+  	      ;; 출력 길이 제한 
+  	      (when (> (length output-string) max-output-length)
+  		(setq output-string
+  		      (concat (substring output-string 0 max-output-length)
+  			      "\n\n... [Output truncated: 출력이 너무 깁니다. 더 구체적인 인자를 주어 실행하세요.] ...")))
+  	      (format "Exit Code: %d\nOutput:\n%s " exit-code output-string)))))
+        (error (format "Error: 시스템 오류 발생: %s" (error-message-string err))))))
+
+#+end_src
+
+
+
+
+#+begin_src emacs-lisp
+    (with-eval-after-load 'gptel
+      (gptel-make-tool
+       :name "read_file"
+       :category "harness"
+       :description "Reads the contents fo a specified file and returns it as a string. Use this to inspect existing code, logs, or configuration files before making modifications."
+       :args '((:name "filepath" :type string :description "The absolute or relative path to the file you want to read"))
+       :function #'my-agent-read-file)
+
+      (gptel-make-tool 
+       :name "write_file"
+       :category "harness"
+       :function #'my-agent-write-file
+       :description "Writes or overwrites the given content to the specified file. If the file already exists, its contents will be completely replaced. Directories are created automatically if needed. Use this to create new files or fully update existing ones."
+       :args '((:name "filepath" :type string :description "The absolute or relative path to the file you want to write")
+    	   (:name "content" :type string :description "The complete text content to write into file file.")))
+      
+      ;; Agent를 위해서는 '_'를 써야하지만 emacs-lisp 에서는 '-'를 많이 쓰는 부분을
+      ;; 고려하여 :name 에 들어가는 이름과 실제 function의 파라미터를 잘 구분할 것
+      ;; 아울러 출력 메세지는 LLM이 인지해야하므로 Agent를 위한 '_'를 쓸 것
+      (gptel-make-tool 
+       :name "patch_file"
+       :category "harness"
+       :function #'my-agent-patch-file
+       :description "Replaces a specific text block (old_text) with new text (new_text) in a file. Use this to modify existing files without rewriting the entire file. The old_text must match the target file exactly, including all whitespace and indentation. If the match is ambiguous, include more surrounding lines in old_text."
+       :args '((:name "filepath" :type string :description "The absolute or relative path to the file to modify.")
+    	   (:name "old_text" :type string :description "The exact text block to be replaced. Must be entirely unique within the file.")
+    	   (:name "new_text" :type string :description "The new text block that will replace old_text."))
+       )
+
+      (gptel-make-tool
+       :name "run_shell_command"
+       :function #'my-agent-run-shell-safe
+       :category "harness"
+       :description (format "Safely executes a program. 
+  [STRICT SECURITY CONSTRAINTS]
+  1. Directory Sandbox: You CANNOT execute commands outside of these allowed directories (or their subdirectories): %s
+  2. Command Allowlist: You are ONLY allowed to run the following commands: %s.
+  Do NOT use shell pipes (|), redirects (>), or operators (&&)." 
+                          ;; [개선] Gemini에게 전달하는 설명서에도 미리 절대 경로로 풀어서(Expand) 제공
+                            (string-join (mapcar #'expand-file-name my-agent-allowed-shell-directories) ", ")
+                          (string-join my-agent-allowed-shell-commands ", "))
+       :args '((:name "dir" :type string :description "REQUIRED: The directory to run the command. Must be strictly within one of the allowed sandboxes.")
+  	       (:name "command_string" :type string :description "The allowed executable and its arguments (e.g., 'npm test').")))
+
+      (gptel-make-tool
+       :name "read_pdf"
+       :description "주어진 경로의 PDF 파일에서 텍스트를 추출하여 읽어옵니다. PDF 문서의 내용을 파악하거나 요약해야 할 때 사용하세요."
+       :args (list '(:name "filepath" :type string :description "읽어올 PDF 파일의 절대 경로 (예: /Users/siabard/sandbox/document.pdf)"))
+       :category "file"
+       :function (lambda (filepath)
+                   (cond
+        		;; 1. 파일 존재 여부 확인
+        		((not (file-exists-p filepath))
+        		 (format "Error: 파일을 찾을 수 없습니다: %s" filepath))
+        		
+        		;; 2. CLI 도구 설치 여부 확인
+        		((not (executable-find "pdftotext"))
+        		 "Error: 시스템에 'pdftotext' 명령어가 없습니다. 터미널에서 'brew install poppler'를 실행해 주세요.")
+        		
+        		;; 3. 텍스트 추출 실행
+        		(t
+        		 ;; pdftotext <파일경로> - (표준 출력으로 텍스트 반환)
+        		 (let ((text (shell-command-to-string 
+                                  (format "pdftotext %s -" (shell-quote-argument filepath)))))
+                       (if (string-empty-p (string-trim text))
+                           "Error: 문서에서 텍스트를 추출할 수 없습니다. (스캔된 이미지로만 구성된 PDF일 수 있습니다.)"
+                         text))))))
+
+
+      (gptel-make-tool
+       :name "read_pypdf"
+       :description "주어진 경로의 PDF 파일에서 텍스트를 추출하여 읽어옵니다. PDF 문서의 내용을 파악하거나 요약해야 할 때 사용하세요."
+       :args '((:name "filepath" :type string :description "읽어올 PDF 파일의 절대 경로 (예: /Users/siabard/sandbox/document.pdf)"))
+       :category "file"
+       :function (lambda (filepath)
+                   (cond
+      		;; 1. 파일 존재 여부 확인
+      		((not (file-exists-p filepath))
+      		 (format "Error: 파일을 찾을 수 없습니다: %s" filepath))
+      		
+      		;; 2. 파이썬 명령어 확인
+      		((not (executable-find "python3"))
+      		 "Error: 시스템에 'python3' 명령어가 없습니다.")
+      		
+      		;; 3. Python 인라인 스크립트를 통한 텍스트 추출
+      		(t
+      		 (let* ((py-script "
+      import sys
+      try:
+          from pypdf import PdfReader
+          reader = PdfReader(sys.argv[1])
+          text = '\\n'.join([page.extract_text() for page in reader.pages if page.extract_text()])
+          print(text)
+      except ImportError:
+          print('Error: pypdf 라이브러리가 설치되지 않았습니다. 터미널에서 pip3 install pypdf 를 실행하세요.')
+      except Exception as e:
+          print(f'Error: PDF를 읽는 중 오류가 발생했습니다 ({str(e)})')
+      ")
+      			;; 쉘 명령어 실행 (파이썬 스크립트에 filepath 전달)
+      			(command (format "python3 -c %s %s" 
+      					 (shell-quote-argument py-script) 
+      					 (shell-quote-argument filepath)))
+      			(text (shell-command-to-string command)))
+                       
+                       (if (string-empty-p (string-trim text))
+                           "Error: 문서에서 텍스트를 추출할 수 없습니다. (스캔된 이미지이거나 암호가 걸려있을 수 있습니다.)"
+                         text))))))
+
+      )
 #+end_src
 
 ** GPTEL-AGENT
@@ -1248,9 +1441,8 @@ Lua 의 경우 버전 낮춘다.
   (use-package gptel-agent
     :ensure (:host github :repo "karthink/gptel-agent" :files ("*.el" "agents"))
     :after gptel
-    :custom
-    (add-to-list 'gptel-agent-dirs (expand-file-name "~/project/ai/gptel-agents/"))
     :config
+    (add-to-list 'gptel-agent-dirs (expand-file-name "~/project/ai/gptel-agents/"))
     (unless (file-exists-p "~/project/ai/gptel-agents/")
       (make-directory "~/project/ai/gptel-agents/" t)))
 #+end_src
@@ -1308,4 +1500,21 @@ Lua 의 경우 버전 낮춘다.
           ;; 작업 완료 후 context.org 파일을 엽니다.
           (find-file (expand-file-name "context.org" dir-path))
           (message "성공적으로 %s 에 이터레이션을 생성했습니다." dir-path)))))
+#+end_src
+
+
+** 저사양기기 
+
+#+begin_src emacs-lisp
+
+  (setq-default
+   ;; eldoc이 너무 자주 호출되어 CPU를 점유하는 것을 방지
+   eldoc-idle-delay 0.5
+   
+   ;; eglot 관련 이벤트 로그 비활성화 (디버깅 시에만 켬)
+   eglot-events-buffer-size 0
+   
+   ;; corfu의 자동 완성 지연 시간을 살짝 늘려 타이핑 부하 감소
+   corfu-auto-delay 0.2
+   corfu-auto-prefix 2)
 #+end_src
