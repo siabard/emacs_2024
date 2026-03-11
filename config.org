@@ -68,6 +68,8 @@
   - [[#gptel-tool][GPTEL tool]]
   - [[#gptel-agent][GPTEL-AGENT]]
   - [[#sdd][SDD]]
+  - [[#agent---persona][Agent - persona]]
+- [[#저사양-지원][저사양 지원]]
   - [[#저사양기기][저사양기기]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
@@ -1189,13 +1191,13 @@ Lua 의 경우 버전 낮춘다.
 #+begin_src emacs-lisp
   (defun my-agent-read-file (filepath)
     "저장된 FILEPATH의 파일 내용을 읽어서 문자열로 반환한다. 
-    파일이 없거나 읽을 수 없는 경우 에러 메세지를 반환하여 에이전트가 상황을 인지하게 한다."
+      파일이 없거나 읽을 수 없는 경우 에러 메세지를 반환하여 에이전트가 상황을 인지하게 한다."
     (let ((expanded-path (expand-file-name filepath)))
       (if (file-readable-p expanded-path)
-    	(with-temp-buffer 
-    	  ;; 파일을 임시 버퍼에 삽입하고 그 내용을 문자열로 추출 
-    	  (insert-file-contents expanded-path)
-    	  (buffer-string))
+      	(with-temp-buffer 
+      	  ;; 파일을 임시 버퍼에 삽입하고 그 내용을 문자열로 추출 
+      	  (insert-file-contents expanded-path)
+      	  (buffer-string))
         ;; 에이전투가 실패 원인을 알도록 에러 반환 
         (format "Error: Cannot read file or file is not exist. path: %s" expanded-path))))
 
@@ -1519,6 +1521,108 @@ Lua 의 경우 버전 낮춘다.
 #+end_src
 
 
+
+
+
+
+** Agent - persona 
+
+=personas= 저장 디렉토리와 =skilsl= 저장 디렉토리가 필요 
+
+#+begin_src emacs-lisp
+
+  ;; 에이전트 프롬프트 저장 루틴 
+  (defvar my-agent-prompt-dir "~/project/ai/harness_prompts"
+    "personas와 skills 마크다운 파일들이 저장된 최상위 경로"
+    )
+
+  (defun my-agent-read-fragment (type name)
+    "TYPE(personas 또는 skills)과 NAME에 해당하는 텍스트 파일을 읽어온다"
+    (let ((filepath (expand-file-name (format "%s/%s.md" type name) my-agent-prompt-dir)))
+      (if (file-readable-p filepath)
+  	(with-temp-buffer
+  	  (insert-file-contents filepath)
+  	  (buffer-string))
+        ;; 파일이 없으면 경고 (디버깅 용)
+        (format "Warning: %s.md 파일이 %s 폴더에 없음" name type))))
+
+  (defun my-agent-build-directive (persona-name skill-names)
+    "저장된 Persona 파일 1개와 다수의 SKILL 파일들을 하나로 결합"
+    (let ((persona-text (my-agent-read-fragment "personas" persona-name))
+  	;; 스킬 목록을 순회하여 텍스트를 읽고, 줄바꿈으로 이어붙임 
+  	(skills-text (mapconcat (lambda (skill) 
+  				  (my-agent-read-fragment "skills" skill)) 
+  				  skill-names
+  				  "\n\n---\n\n")))
+      (concat
+       "=== [AGENT PERSONA] ===\n"
+       persona-text "\n\n"
+       "=== [AVAILABLE SKILLS & GUIDELINES] ===\n"
+       skills-text "\n\n"
+       "=== [RULES] ===\n"
+       "위의 페르소나와 스킬 지침을 엄격히 준수하여 사용자의 요청을 처리하십시오.")))
+#+end_src
+
+#+begin_src emacs-lisp
+  ;; 앞서 정의한 도구 변수들이 메모리에 있다고 가정합니다:
+  ;; my-gptel-tool-read-file, my-gptel-tool-write-file, my-gptel-tool-patch-file, my-gptel-tool-run-shell
+
+  (defvar my-agent-profiles
+    '(("Code Reviewer" . (:persona "odin-reviewer"
+  				 :skills ("odin-best-practices")
+  				 :tools ("read_file"))) ; 읽기 도구만 허용!
+      
+      ("Refactoring Specialist" . (:persona "refactor-expert"
+  					  :skills ("clean-code" "python-pytest")
+  					  :tools ("read_file"
+  						  "write_file"
+  						  "patch_file"))) ; 읽기와 부분 수정만 허용!
+      
+      ("Full Autonomous Developer" . (:persona "senior-developer"
+  					     :skills ("system-architecture" "debugging")
+  					     :tools ("read_file"
+  						     "write_file"
+  						     "patch_file"
+  						     "run_shell_command")))) ; 모든 권한 부여
+    "페르소나 이름과 해당 페르소나가 사용할 파일(persona, skills) 및 도구(tools)들의 매핑 리스트입니다.")
+#+end_src
+
+
+#+begin_src emacs-lisp 
+
+  (defun my-agent-activate-profile ()
+    "현재 gptel 채팅 버퍼에 특정 에이전트 페르소나와 도구 권한을 동적으로 할당합니다."
+    (interactive)
+    ;; 1. 사용자에게 프로필 선택받기
+    (let* ((profile-names (mapcar #'car my-agent-profiles))
+  	 (selected-name (completing-read "에이전트 페르소나 선택: " profile-names nil t))
+  	 (profile-data (cdr (assoc selected-name my-agent-profiles)))
+  	 
+  	 ;; 2. 프로필 데이터에서 정보 추출
+  	 (persona-file (plist-get profile-data :persona))
+  	 (skill-files (plist-get profile-data :skills))
+  	 (allowed-tools (plist-get profile-data :tools)))
+      
+      ;; 3. 프롬프트 동적 조립 (이전 답변의 함수 활용)
+      ;; 만약 my-agent-build-directive 함수가 아직 파일 시스템에 없다면, 
+      ;; 아래 문자열 대신 직접 하드코딩된 프롬프트를 넣으셔도 무방합니다.
+      (let ((dynamic-prompt (my-agent-build-directive persona-file skill-files)))
+        
+        ;; 4. [핵심] 현재 버퍼에만 로컬로 시스템 프롬프트 덮어쓰기
+        (setq-local gptel-system-message dynamic-prompt)
+        
+        ;; 5. [핵심] 현재 버퍼에만 로컬로 허용된 도구 리스트 덮어쓰기
+        ;; list 함수를 사용하여 심볼들을 실제 리스트로 만듭니다.
+        (setq-local gptel-tools (mapcar #'gptel-get-tool allowed-tools))
+        
+        ;; 6. 상태 알림
+        (message "[%s] 에이전트 활성화 완료! (허용된 도구: %d개)" 
+                 selected-name 
+                 (length allowed-tools)))))
+#+end_src
+
+* 저사양 지원 
+
 ** 저사양기기 
 
 #+begin_src emacs-lisp
@@ -1534,3 +1638,5 @@ Lua 의 경우 버전 낮춘다.
    corfu-auto-delay 0.2
    corfu-auto-prefix 2)
 #+end_src
+
+
